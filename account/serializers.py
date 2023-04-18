@@ -2,7 +2,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from account.models import UserTable, Add_account
+from account.models import *
 
 
 class UserTableSerializer(serializers.ModelSerializer):
@@ -29,4 +29,41 @@ class AddAccountSerializer(serializers.ModelSerializer):
         model = Add_account
         fields = ['acc_no', 'ifsc', 'current_bal', 'current_due']
 
+class InvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = '__all__'
+
+
+class BillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bill
+        fields = '__all__'
+
+class FinanceOutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Finance_out
+        fields = '__all__'
+
+
+class InsuranceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Insurance
+        fields = '__all__'
+
+
+class EvaluationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Evaluation
+        fields = '__all__'
+
+class PayrollSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Payroll
+        fields = '__all__'
 
