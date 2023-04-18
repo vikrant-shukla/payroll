@@ -10,4 +10,7 @@ urlpatterns = [
     path('addaccount/', views.AddAccountApi.as_view(), name='login'),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="RefreshToken"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="RefreshToken"),
+    path('financeout/', views.FinanceOutAPI.as_view(), name='login'),
+    path('payroll/', views.PayrollAPI.as_view(), name='login'),
+
 ]
