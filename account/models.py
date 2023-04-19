@@ -28,6 +28,9 @@ class Add_account(models.Model):
     current_bal = models.IntegerField(default=0)
     current_due = models.IntegerField(default=0)
 
+    def __str__(self):
+        return str(self.acc_no)
+
 
 class Invoice(models.Model):
     invoice_no = models.IntegerField(default=0)
@@ -36,10 +39,16 @@ class Invoice(models.Model):
     deduction = models.IntegerField(default=0)
     deduction_reason = models.CharField(max_length=200)
 
+    def __str__(self):
+        return str(self.invoice_no)
+
 
 class Payment(models.Model):
     payment_date = models.DateField
     payment_ref_no = models.IntegerField(default=0)
+
+    def __str__(self):
+        return str(self.payment_ref_no)
 
 
 class Finance_in(models.Model):
@@ -48,6 +57,9 @@ class Finance_in(models.Model):
     invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE)
     tds_tax = models.IntegerField(default=0)
+
+    def __str__(self):
+        return str(self.invoice_detail)
 
 
 class Bill(models.Model):
@@ -58,21 +70,26 @@ class Bill(models.Model):
     electricity_bill = models.IntegerField(default=0)
     other_bill = models.IntegerField(default=0)
 
+    def __str__(self):
+        return str(self.rent_bill)
+
 
 class Finance_out(models.Model):
     amount = models.IntegerField(default=0)
     ref_no = models.IntegerField(default=0)
-    invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE)
-    payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True)
+    payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
     tds_tax = models.IntegerField(default=0)
-    bills = models.ForeignKey(Bill, on_delete=models.CASCADE)
+    bills = models.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
     salary_process = models.CharField(max_length=20)
+
+    def __str__(self):
+        return str(self.amount)
 
 
 eval_choices = (
     ("1", "Pass"),
     ("2", "Fail"),
-
 
 )
 

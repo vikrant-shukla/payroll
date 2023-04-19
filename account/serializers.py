@@ -29,14 +29,23 @@ class AddAccountSerializer(serializers.ModelSerializer):
         model = Add_account
         fields = ['acc_no', 'ifsc', 'current_bal', 'current_due']
 
+
 class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = '__all__'
+
+    def create(self, validated_data):
+        return Invoice.objects.create(**validated_data)
+
+
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
+
+    # def create(self, validated_data):
+    #     return Payment.objects.create(**validated_data)
 
 
 class BillSerializer(serializers.ModelSerializer):
@@ -44,10 +53,21 @@ class BillSerializer(serializers.ModelSerializer):
         model = Bill
         fields = '__all__'
 
+    # def create(self, validated_data):
+    #     return Bill.objects.create(**validated_data)
+
+
 class FinanceOutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Finance_out
         fields = '__all__'
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['bills'] = BillSerializer(instance.bills).data
+        response['invoice_detail'] = InvoiceSerializer(instance.invoice_detail).data
+        response['payment_detail'] = PaymentSerializer(instance.payment_detail).data
+        return response
 
 
 class InsuranceSerializer(serializers.ModelSerializer):
@@ -61,9 +81,8 @@ class EvaluationSerializer(serializers.ModelSerializer):
         model = Evaluation
         fields = '__all__'
 
+
 class PayrollSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = Payroll
         fields = '__all__'
-

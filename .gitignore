@@ -1,2 +1,4 @@
 venv
 .idea
+account/migrations/__pycache__/
+account/__pycache__/
