@@ -23,7 +23,8 @@ class UserTable(AbstractUser):
 
 
 class Add_account(models.Model):
-    acc_no = models.IntegerField(default=0)
+    # id = models.IntegerField(primary_key=True)
+    acc_no = models.IntegerField(default=0, unique=True)
     ifsc = models.CharField(max_length=20)
     current_bal = models.IntegerField(default=0)
     current_due = models.IntegerField(default=0)
@@ -32,12 +33,19 @@ class Add_account(models.Model):
         return str(self.acc_no)
 
 
+amount_state = (
+    ("in", "In"),
+    ("out", "Out"),
+)
+
+
 class Invoice(models.Model):
-    invoice_no = models.IntegerField(default=0)
+    invoice_no = models.IntegerField(default=0, unique=True)
     invoice_date = models.DateField
     invoice_amount = models.IntegerField(default=0)
     deduction = models.IntegerField(default=0)
     deduction_reason = models.CharField(max_length=200)
+    received_transfer = models.CharField(max_length=20, choices=amount_state)
 
     def __str__(self):
         return str(self.invoice_no)
@@ -45,7 +53,8 @@ class Invoice(models.Model):
 
 class Payment(models.Model):
     payment_date = models.DateField
-    payment_ref_no = models.IntegerField(default=0)
+    payment_ref_no = models.IntegerField(default=0, unique=True)
+    received_transfer = models.CharField(max_length=20, choices=amount_state)
 
     def __str__(self):
         return str(self.payment_ref_no)
@@ -53,10 +62,11 @@ class Payment(models.Model):
 
 class Finance_in(models.Model):
     amount = models.IntegerField(default=0)
-    ref_no = models.IntegerField(default=0)
-    invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE)
-    payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    ref_no = models.IntegerField(default=0, unique=True)
+    invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True )
+    payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
     tds_tax = models.IntegerField(default=0)
+    account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return str(self.invoice_detail)
@@ -76,12 +86,13 @@ class Bill(models.Model):
 
 class Finance_out(models.Model):
     amount = models.IntegerField(default=0)
-    ref_no = models.IntegerField(default=0)
+    ref_no = models.IntegerField(default=0, unique=True)
     invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True)
     payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
     tds_tax = models.IntegerField(default=0)
     bills = models.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
     salary_process = models.CharField(max_length=20)
+    account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return str(self.amount)

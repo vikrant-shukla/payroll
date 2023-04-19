@@ -36,96 +36,40 @@ class AddAccountApi(APIView):
     def get(self, request):
         books = Add_account.objects.all()
         serializer = AddAccountSerializer(books, many=True)
-        return Response(serializer.data)
+        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = AddAccountSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'Account added successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class InvoiceAPI(APIView):
-#     permission_classes = (IsAuthenticated,)
-#     def post(self, request):
-#         serializer = InvoiceSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'message': 'invoice detail added successfully'}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class PaymentAPI(APIView):
-#     permission_classes = (IsAuthenticated,)
-#     def post(self, request):
-#         serializer = PaymentSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'message': 'payment added successfully'}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
-
-
-# class BillAPI(APIView):
-#     permission_classes = (IsAuthenticated,)
-# def post(self, request):
-#         serializer = BillSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'message': 'bill added successfully'}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class FinanceOutAPI(APIView):
-#     permission_classes = (IsAuthenticated,)
-#     def post(self, request):
-#         serializer = FinanceOutSerializer(data=request.data)
-#         if serializer.is_valid(raise_exception=True):
-#             serializer.save(user=request.user)
-#             return Response({'message': 'finance added successfully'}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class InvoiceAPI(APIView):
-    def get(self, request):
-        books = Invoice.objects.all()
-        serializer = PaymentSerializer(books, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = PaymentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class PaymentAPI(APIView):
-    def get(self, request):
-        books = Payment.objects.all()
-        serializer = PaymentSerializer(books, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = PaymentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-#
-class BillAPI(APIView):
-    def get(self, request):
-        books = Bill.objects.all()
-        serializer = BillSerializer(books, many=True)
-        return Response(serializer.data)
-
+class BillApiView(APIView):
     def post(self, request):
         serializer = BillSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InvoiceApiView(APIView):
+    def post(self, request):
+        serializer = InvoiceSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentApiView(APIView):
+    def post(self, request):
+        serializer = PaymentSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -143,19 +87,47 @@ class FinanceOutAPI(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PayrollAPI(APIView):
-    permission_classes = (IsAuthenticated,)
-
+class FinanceInApi(APIView):
     def get(self, request):
-        books = Payroll.objects.all()
-        serializer = PayrollSerializer(books, many=True)
+        pym = Finance_in.objects.all()
+        serializer = FinanceInSerializer(pym, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = PayrollSerializer(data=request.data)
+        serializer = FinanceInSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'employee details added successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class Graduation_detailsApi(APIView):
+    def post(self, request):
+        serializer = Graduation_detailsSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'successfully'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PostGraduationApi(APIView):
+    def post(self, request):
+        serializer = PostGraduationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'successfully'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MarksheetApi(APIView):
+
+    def post(self, request):
+        serializer = MarksheetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'successfully'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -191,28 +163,17 @@ class EvaluationAPI(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BillApiView(APIView):
+class PayrollAPI(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        books = Payroll.objects.all()
+        serializer = PayrollSerializer(books, many=True)
+        return Response(serializer.data)
+
     def post(self, request):
-        serializer = BillSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
+        serializer = PayrollSerializer(data=request.data)
+        if serializer.is_valid():
             serializer.save()
-            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class InvoiceApiView(APIView):
-    def post(self, request):
-        serializer = InvoiceSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class PaymentApiView(APIView):
-    def post(self, request):
-        serializer = PaymentSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({'message': 'employee details added successfully'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
