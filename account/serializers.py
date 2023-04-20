@@ -85,13 +85,13 @@ class Graduation_detailsSerializer(serializers.ModelSerializer):
 
 class PostGraduationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Graduation_details
+        model = PostGraduation
         fields = '__all__'
 
 
 class MarksheetSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Graduation_details
+        model = Marksheet
         fields = '__all__'
         
     def to_representation(self, instance):

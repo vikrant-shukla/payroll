@@ -99,21 +99,28 @@ class Finance_out(models.Model):
 
 
 eval_choices = (
-    ("1", "Pass"),
-    ("2", "Fail"),
-
+    ("pass", "Pass"),
+    ("fail", "Fail"),
 )
 
 
 class Evaluation(models.Model):
+    
     evaluation = models.CharField(max_length=200)
-    status = models.CharField(max_length=20, choices=eval_choices, default="1")
-
+    status = models.CharField(max_length=20, choices=eval_choices, default="pass")
+    notes = models.CharField(max_length=2000)
+    
+    def __str__(self) -> str:
+        return str(self.evaluation)
 
 class Insurance(models.Model):
     policy_no = models.IntegerField(default=0)
     nominee = models.CharField(max_length=20)
     insured_value = models.IntegerField(default=0)
+    
+    def __str__(self) -> str:
+        return str(self.policy_no)
+        
 
 
 # class Salary_breakup(models.Model):
@@ -150,8 +157,8 @@ class Marksheet(models.Model):
 
 
 User_choices = (
-    ("1", "UG"),
-    ("2", "PG"),
+    ("ug", "UG"),
+    ("pg", "PG"),
 )
 
 
@@ -165,7 +172,7 @@ class Payroll(models.Model):
     pan_no = models.CharField(max_length=15)
     pan_attach = models.FileField(upload_to="files", blank=True, null=True)
     marksheet_attach = models.ForeignKey(Marksheet, on_delete=models.CASCADE)
-    graduation = models.CharField(max_length=20, choices=User_choices, default="1")
+    graduation = models.CharField(max_length=20, choices=User_choices, default="ug")
     dob = models.DateField
     doj = models.DateField
     provision_period = models.DateField
