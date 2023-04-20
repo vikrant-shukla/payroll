@@ -77,22 +77,28 @@ class FinanceInSerializer(serializers.ModelSerializer):
     # def create(self, validate_data):
     #     return Finance_in.objects.create(**validate_data)
 
-class Graduation_detailsSerializer(serializers.Serializer):
+class Graduation_detailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Graduation_details
         fields = '__all__'
 
 
-class PostGraduationSerializer(serializers.Serializer):
+class PostGraduationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Graduation_details
         fields = '__all__'
 
 
-class MarksheetSerializer(serializers.Serializer):
+class MarksheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Graduation_details
         fields = '__all__'
+        
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['graduation_details'] = Graduation_detailsSerializer(instance.graduation_details).data
+        response['post_graduation'] = PostGraduationSerializer(instance.post_graduation).data
+        return response
 
 
 class InsuranceSerializer(serializers.ModelSerializer):
@@ -111,3 +117,11 @@ class PayrollSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payroll
         fields = '__all__'
+        
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['marksheet_attach'] = MarksheetSerializer(instance.marksheet_attach).data
+        response['evalution'] = EvaluationSerializer(instance.evalution).data
+        response['insurance'] = InsuranceSerializer(instance.insurance).data
+        # response['account'] = AddAccountSerializer(instance.account).data
+        return response

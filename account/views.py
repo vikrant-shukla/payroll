@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from account.models import *
 from account.serializers import *
+from rest_framework import viewsets
 
 
 # Create your views here.
@@ -103,13 +104,21 @@ class FinanceInApi(APIView):
 
 
 
-class Graduation_detailsApi(APIView):
-    def post(self, request):
-        serializer = Graduation_detailsSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'successfully'}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class Graduation_detailsViewSet(viewsets.ModelViewSet):
+    queryset = Graduation_details.objects.all()
+    serializer_class = Graduation_detailsSerializer
+    # def get(self, request):
+    #     pym = Graduation_details.objects.all()
+    #     serializer = Graduation_detailsSerializer(pym, many=True)
+    #     return Response(serializer.data)
+    
+    
+    # def post(self, request):
+    #     serializer = Graduation_detailsSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PostGraduationApi(APIView):
@@ -117,7 +126,7 @@ class PostGraduationApi(APIView):
         serializer = PostGraduationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message':  serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -127,7 +136,7 @@ class MarksheetApi(APIView):
         serializer = MarksheetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message': serializer.data }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -175,5 +184,5 @@ class PayrollAPI(APIView):
         serializer = PayrollSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'employee details added successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message':  serializer.data }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
