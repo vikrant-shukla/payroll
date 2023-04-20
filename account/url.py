@@ -1,8 +1,14 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
-
+from django.conf.urls.static import static
+from django.conf import settings
+from account.views import Graduation_detailsViewSet
+from rest_framework.routers import DefaultRouter
 from account import views
+
+router=DefaultRouter()
+router.register('files',Graduation_detailsViewSet, basename='files')
 
 urlpatterns = [
     path('register/', views.RegisterAPI.as_view()),
@@ -17,13 +23,10 @@ urlpatterns = [
     path('invoice/', views.InvoiceApiView.as_view(), name='invoice'),
     path('payroll/', views.PayrollAPI.as_view(), name='payroll'),
     path('marksheet/', views.MarksheetApi.as_view(), name='marksheet'),
-    path('garduationmarksheet/', views.Graduation_detailsApi.as_view(), name='garduationmarksheet'),
+    path('garduationmarksheet/', views.Graduation_detailsViewSet.as_view({'get':'list','post':'create'}), name='garduationmarksheet'),
     path('Postgarduationmarksheet/', views.PostGraduationApi.as_view(), name='Postgarduationmarksheet'),
     path('evaluation/', views.EvaluationAPI.as_view(), name='evaluation'),
     path('insuarance/', views.InsuranceAPI.as_view(), name='insuarance'),
+    path ('api/',include(router.urls)),
 
-
-
-
-
-]
+] 
