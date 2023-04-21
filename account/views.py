@@ -105,39 +105,33 @@ class FinanceInApi(APIView):
 
 
 class Graduation_detailsViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated,]
     queryset = Graduation_details.objects.all()
     serializer_class = Graduation_detailsSerializer
-    # def get(self, request):
-    #     pym = Graduation_details.objects.all()
-    #     serializer = Graduation_detailsSerializer(pym, many=True)
-    #     return Response(serializer.data)
-    
+
+
+class PostGraduationApi(viewsets.ModelViewSet):
+    queryset = PostGraduation.objects.all()
+    serializer_class = PostGraduationSerializer
     
     # def post(self, request):
-    #     serializer = Graduation_detailsSerializer(data=request.data)
+    #     serializer = PostGraduationSerializer(data=request.data)
     #     if serializer.is_valid():
     #         serializer.save()
-    #         return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
+    #         return Response({'message':  serializer.data}, status=status.HTTP_201_CREATED)
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PostGraduationApi(APIView):
-    def post(self, request):
-        serializer = PostGraduationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message':  serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class MarksheetApi(viewsets.ModelViewSet):
+    queryset = Marksheet.objects.all()
+    serializer_class = MarksheetSerializer
 
-
-class MarksheetApi(APIView):
-
-    def post(self, request):
-        serializer = MarksheetSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': serializer.data }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def post(self, request):
+    #     serializer = MarksheetSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response({'message': serializer.data }, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class InsuranceAPI(APIView):
@@ -146,13 +140,13 @@ class InsuranceAPI(APIView):
     def get(self, request):
         books = Insurance.objects.all()
         serializer = InsuranceSerializer(books, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = InsuranceSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'Insurance details added successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -162,13 +156,13 @@ class EvaluationAPI(APIView):
     def get(self, request):
         books = Evaluation.objects.all()
         serializer = EvaluationSerializer(books, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = EvaluationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'Evaluation details added successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -178,7 +172,7 @@ class PayrollAPI(APIView):
     def get(self, request):
         books = Payroll.objects.all()
         serializer = PayrollSerializer(books, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = PayrollSerializer(data=request.data)
