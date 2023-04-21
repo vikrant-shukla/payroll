@@ -31,6 +31,8 @@ class AddAccountSerializer(serializers.ModelSerializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
+    related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
+    
     class Meta:
         model = Invoice
         fields = '__all__'

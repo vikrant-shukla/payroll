@@ -26,7 +26,7 @@ class RegisterAPI(APIView):
 
 
 class LoginAPI(TokenObtainPairView):
-    """Api for user to login into game"""
+    """Api for user to login into project"""
     permission_classes = (AllowAny,)
     serializer_class = AuthTokenSerializer
 
@@ -57,6 +57,19 @@ class BillApiView(APIView):
 
 
 class InvoiceApiView(APIView):
+    def get(self, request):
+        query_parameter = request.query_params
+        data = query_parameter['id'] if len(query_parameter) != 0 else False
+        if data:
+            query = Invoice.objects.filter(id=query_parameter['id'])
+        else:
+            query = Invoice.objects.all()
+    
+        serializer = InvoiceSerializer(query, many=True)
+        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+    
+                
+        
     def post(self, request):
         serializer = InvoiceSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -140,7 +153,7 @@ class InsuranceAPI(APIView):
     def get(self, request):
         books = Insurance.objects.all()
         serializer = InsuranceSerializer(books, many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+        return Response(id.data,status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = InsuranceSerializer(data=request.data)
