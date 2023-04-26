@@ -41,7 +41,7 @@ amount_state = (
 
 class Invoice(models.Model):
     invoice_no = models.IntegerField(default=0, unique=True)
-    invoice_date = models.DateField
+    invoice_date = models.DateField()
     invoice_amount = models.IntegerField(default=0)
     deduction = models.IntegerField(default=0)
     deduction_reason = models.CharField(max_length=200)
@@ -52,7 +52,7 @@ class Invoice(models.Model):
 
 
 class Payment(models.Model):
-    payment_date = models.DateField
+    payment_date = models.DateField()
     payment_ref_no = models.IntegerField(default=0, unique=True)
     received_transfer = models.CharField(max_length=20, choices=amount_state)
 
