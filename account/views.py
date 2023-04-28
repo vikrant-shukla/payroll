@@ -1,16 +1,10 @@
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
-
-from account.models import *
 from account.serializers import *
 from rest_framework import viewsets
-
-
-# Create your views here.
 
 
 class RegisterAPI(APIView):
@@ -64,12 +58,9 @@ class InvoiceApiView(APIView):
             query = Invoice.objects.filter(id=query_parameter['id'])
         else:
             query = Invoice.objects.all()
-    
         serializer = InvoiceSerializer(query, many=True)
         return Response({'message': serializer.data}, status=status.HTTP_200_OK)
-    
-                
-        
+
     def post(self, request):
         serializer = InvoiceSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -115,10 +106,8 @@ class FinanceInApi(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class Graduation_detailsViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated, ]
     queryset = Graduation_details.objects.all()
     serializer_class = Graduation_detailsSerializer
 
@@ -126,25 +115,11 @@ class Graduation_detailsViewSet(viewsets.ModelViewSet):
 class PostGraduationApi(viewsets.ModelViewSet):
     queryset = PostGraduation.objects.all()
     serializer_class = PostGraduationSerializer
-    
-    # def post(self, request):
-    #     serializer = PostGraduationSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response({'message':  serializer.data}, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MarksheetApi(viewsets.ModelViewSet):
     queryset = Marksheet.objects.all()
     serializer_class = MarksheetSerializer
-
-    # def post(self, request):
-    #     serializer = MarksheetSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response({'message': serializer.data }, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class InsuranceAPI(APIView):
@@ -153,7 +128,7 @@ class InsuranceAPI(APIView):
     def get(self, request):
         books = Insurance.objects.all()
         serializer = InsuranceSerializer(books, many=True)
-        return Response(id.data,status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = InsuranceSerializer(data=request.data)
@@ -169,7 +144,7 @@ class EvaluationAPI(APIView):
     def get(self, request):
         books = Evaluation.objects.all()
         serializer = EvaluationSerializer(books, many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = EvaluationSerializer(data=request.data)
@@ -185,11 +160,11 @@ class PayrollAPI(APIView):
     def get(self, request):
         books = Payroll.objects.all()
         serializer = PayrollSerializer(books, many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = PayrollSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message':  serializer.data }, status=status.HTTP_201_CREATED)
+            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

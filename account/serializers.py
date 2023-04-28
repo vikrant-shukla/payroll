@@ -76,8 +76,6 @@ class FinanceInSerializer(serializers.ModelSerializer):
         response['account'] = AddAccountSerializer(instance.account).data
         return response
 
-    # def create(self, validate_data):
-    #     return Finance_in.objects.create(**validate_data)
 
 class Graduation_detailsSerializer(serializers.ModelSerializer):
     class Meta:
