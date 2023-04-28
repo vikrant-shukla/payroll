@@ -1,7 +1,8 @@
+from importlib import resources
+
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 from account.models import *
 
 
@@ -32,28 +33,42 @@ class AddAccountSerializer(serializers.ModelSerializer):
 
 class InvoiceSerializer(serializers.ModelSerializer):
     related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
-    
+
     class Meta:
         model = Invoice
-        fields = '__all__'
+        fields = ('invoice_no', 'invoice_date', 'related_model_id','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
 
 
 class PaymentSerializer(serializers.ModelSerializer):
+    related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
     class Meta:
         model = Payment
-        fields = '__all__'
+        fields = ('payment_date', 'related_model_id', 'payment_ref_no', 'received_transfer')
 
 
 class BillSerializer(serializers.ModelSerializer):
+    related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
     class Meta:
         model = Bill
-        fields = '__all__'
+        fields = ('related_model_id', 'rent_bill', 'food_bill', 'paper_bill', 'water_bill', 'electricity_bill', 'other_bill')
 
 
 class FinanceOutSerializer(serializers.ModelSerializer):
+    invoice = serializers.SerializerMethodField()
+    payment = serializers.SerializerMethodField()
+    bill = serializers.SerializerMethodField()
+
+    def get_invoice(self, instance):
+        return InvoiceSerializer(instance=instance.invoice_detail).data
+
+    def get_payment(self, instance):
+        return PaymentSerializer(instance=instance.payment_detail).data
+
+    def get_bill(self, instance):
+        return BillSerializer(instance=instance.bills).data
     class Meta:
         model = Finance_out
-        fields = '__all__'
+        fields = ('amount', 'ref_no', 'invoice', 'payment','tds_tax', 'bill', 'salary_process')
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
@@ -65,16 +80,26 @@ class FinanceOutSerializer(serializers.ModelSerializer):
 
 
 class FinanceInSerializer(serializers.ModelSerializer):
+    invoice = serializers.SerializerMethodField()
+    payment = serializers.SerializerMethodField()
+
+    def get_invoice(self, instance):
+        return InvoiceSerializer(instance=instance.invoice_detail).data
+    def get_payment(self, instance):
+        return PaymentSerializer(instance=instance.payment_detail).data
+        
     class Meta:
         model = Finance_in
-        fields = '__all__'
+        fields = ('amount', 'ref_no', 'invoice', 'payment', 'tds_tax')
 
     def to_representation(self, instance):
+
         response = super().to_representation(instance)
         response['invoice_detail'] = InvoiceSerializer(instance.invoice_detail).data
         response['payment_detail'] = PaymentSerializer(instance.payment_detail).data
         response['account'] = AddAccountSerializer(instance.account).data
         return response
+
 
 
 class Graduation_detailsSerializer(serializers.ModelSerializer):
@@ -93,7 +118,7 @@ class MarksheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Marksheet
         fields = '__all__'
-        
+
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['graduation_details'] = Graduation_detailsSerializer(instance.graduation_details).data
@@ -117,7 +142,7 @@ class PayrollSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payroll
         fields = '__all__'
-        
+
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['marksheet_attach'] = MarksheetSerializer(instance.marksheet_attach).data

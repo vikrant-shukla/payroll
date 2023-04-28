@@ -3,7 +3,7 @@ from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from django.conf.urls.static import static
 from django.conf import settings
-from account.views import Graduation_detailsViewSet, PostGraduationApi,MarksheetApi
+from account.views import Graduation_detailsViewSet, PostGraduationApi, MarksheetApi, ExcelExportView, ExcelExport
 from rest_framework.routers import DefaultRouter
 from account import views
 
@@ -30,6 +30,9 @@ urlpatterns = [
     path('Postgarduationmarksheet/', views.PostGraduationApi.as_view({'get':'list','post':'create'}), name='Postgarduationmarksheet'),
     path('evaluation/', views.EvaluationAPI.as_view(), name='evaluation'),
     path('insuarance/', views.InsuranceAPI.as_view(), name='insuarance'),
-    path ('api/',include(router.urls)),
+    path ('api/', include(router.urls)),
+    path('exportin/', ExcelExportView.as_view(), name='export'),
+    path('exportout/', ExcelExport.as_view(), name='export'),
+
 
 ] 
