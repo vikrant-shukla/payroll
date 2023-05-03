@@ -73,15 +73,13 @@ class Finance_in(models.Model):
 
 
 class Bill(models.Model):
-    rent_bill = models.IntegerField(default=0)
-    food_bill = models.IntegerField(default=0)
-    paper_bill = models.IntegerField(default=0)
-    water_bill = models.IntegerField(default=0)
-    electricity_bill = models.IntegerField(default=0)
-    other_bill = models.IntegerField(default=0)
-
+    bill_no = models.IntegerField(default=0, unique=True)
+    bill_date=models.DateField()
+    bill_amount = models.IntegerField(default=0)
+    bill_type = models.CharField(max_length=20)
+    
     def __str__(self):
-        return str(self.rent_bill)
+        return str(self.bill_type)
 
 
 class Finance_out(models.Model):

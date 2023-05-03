@@ -50,7 +50,7 @@ class BillSerializer(serializers.ModelSerializer):
     related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
     class Meta:
         model = Bill
-        fields = ('related_model_id', 'rent_bill', 'food_bill', 'paper_bill', 'water_bill', 'electricity_bill', 'other_bill')
+        fields = ('related_model_id', 'bill_no', 'bill_date', 'bill_amount', 'bill_type')
 
 
 class FinanceOutSerializer(serializers.ModelSerializer):
