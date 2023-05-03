@@ -47,6 +47,8 @@ class Invoice(models.Model):
     deduction_reason = models.CharField(max_length=200)
     received_transfer = models.CharField(max_length=20, choices=amount_state)
 
+
+
     def __str__(self):
         return str(self.invoice_no)
 
@@ -68,20 +70,11 @@ class Finance_in(models.Model):
     tds_tax = models.IntegerField(default=0)
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
 
+
     def __str__(self):
         return str(self.invoice_detail)
 
 
-class Bill(models.Model):
-    rent_bill = models.IntegerField(default=0)
-    food_bill = models.IntegerField(default=0)
-    paper_bill = models.IntegerField(default=0)
-    water_bill = models.IntegerField(default=0)
-    electricity_bill = models.IntegerField(default=0)
-    other_bill = models.IntegerField(default=0)
-
-    def __str__(self):
-        return str(self.rent_bill)
 
 
 class Finance_out(models.Model):
@@ -93,7 +86,7 @@ class Finance_out(models.Model):
     bills = models.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
     salary_process = models.CharField(max_length=20)
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
-
+    final = models.IntegerField(null=True, blank=True)
     def __str__(self):
         return str(self.amount)
 
@@ -112,6 +105,7 @@ class Evaluation(models.Model):
     
     def __str__(self) -> str:
         return str(self.evaluation)
+
 
 class Insurance(models.Model):
     policy_no = models.IntegerField(default=0)
@@ -162,6 +156,7 @@ User_choices = (
 )
 
 
+
 class Payroll(models.Model):
     firstname = models.CharField(max_length=20)
     lastname = models.CharField(max_length=20)
@@ -173,9 +168,10 @@ class Payroll(models.Model):
     pan_attach = models.FileField(upload_to="files", blank=True, null=True)
     marksheet_attach = models.ForeignKey(Marksheet, on_delete=models.CASCADE)
     graduation = models.CharField(max_length=20, choices=User_choices, default="ug")
-    dob = models.DateField
-    doj = models.DateField
-    provision_period = models.DateField
+    dob = models.DateField()
+    doj = models.DateField()
+    probation_days = models.IntegerField(default=90)
+    # probation_period = models.DateField()
     evalution = models.ForeignKey(Evaluation, on_delete=models.CASCADE)
     insurance = models.ForeignKey(Insurance, on_delete=models.CASCADE)
-    # salary_break = models.ForeignKey(Salary_breakup, on_delete=models.CASCADE)
+    # salary_break = models.ForeignKey(Salary_breakup, on_delete=models.CASCADE)s

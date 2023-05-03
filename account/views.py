@@ -53,14 +53,8 @@ class AddAccountApi(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BillApiView(APIView):
-    def post(self, request):
-        serializer = BillSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+  
 
 class InvoiceApiView(APIView):
     def get(self, request):
@@ -87,7 +81,7 @@ class PaymentApiView(APIView):
         serializer = PaymentSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({"ashish@bitsquadsoftware.inmessage": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -97,13 +91,24 @@ class FinanceOutAPI(APIView):
         serializer = FinanceOutSerializer(books, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
-        serializer = FinanceOutSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def post(self, request):
+    #     serializer = FinanceOutSerializer(data=request.data)
+    #     if serializer.is_valid(raise_exception=True):
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+    # def post(self, request):
+    #     serializer = self.serializer_class(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     water_bill = serializer.validated_data['water_bill']
+    #     electricity_bill = serializer.validated_data['electricity_bill']
+    #     other_bill = serializer.validated_data['other_bill']
+    #     result = rent_bill + food_bill + paper_bill + water_bill + electricity_bill + other_bill 
+    #     addition = Bill.objects.create(rent_bill=rent_bill, food_bill = food_bill, paper_bill = paper_bill, water_bill = water_bill , electricity_bill= electricity_bill,other_bill = other_bill,result=result)
+    #     return Response(serializer.data)
 
 class FinanceInApi(APIView):
     def get(self, request):
@@ -223,7 +228,6 @@ class ExcelExportView(APIView):
 
         # all_fields = Finance_in._meta.fields
 
-
         # Get data
         queryset = Finance_in.objects.all()
         serializer = FinanceInSerializer(queryset, many=True)
@@ -305,3 +309,6 @@ class ExcelExport(APIView):
 
         workbook.save(response)
         return response
+    
+
+
