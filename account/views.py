@@ -52,8 +52,19 @@ class AddAccountApi(APIView):
             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
+class BillApiView(APIView):
+    def post(self, request):
+        serializer = BillSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    def get(self, request):
+        bills = Bill.objects.all()
+        total_amount = sum([bill.bill_amount for bill in bills])
+        return Response({'total_amount': total_amount})
   
 
 class InvoiceApiView(APIView):

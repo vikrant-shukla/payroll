@@ -156,7 +156,6 @@ class PayrollSerializer(serializers.ModelSerializer):
     probation_period = serializers.SerializerMethodField()
     
 
-
     class Meta:
         model = Payroll
         fields = ['firstname','lastname', 'fathername','mothername',
