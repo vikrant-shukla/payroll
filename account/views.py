@@ -81,7 +81,7 @@ class PaymentApiView(APIView):
         serializer = PaymentSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response({"ashish@bitsquadsoftware.inmessage": serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

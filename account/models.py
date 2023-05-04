@@ -3,8 +3,6 @@ from django.contrib.auth.models import AbstractUser
 from account.manager import CustomManager
 
 
-# Create your models here.
-
 class UserTable(AbstractUser):
     username = None
     first_name = None
@@ -47,8 +45,6 @@ class Invoice(models.Model):
     deduction_reason = models.CharField(max_length=200)
     received_transfer = models.CharField(max_length=20, choices=amount_state)
 
-
-
     def __str__(self):
         return str(self.invoice_no)
 
@@ -70,11 +66,8 @@ class Finance_in(models.Model):
     tds_tax = models.IntegerField(default=0)
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
 
-
     def __str__(self):
         return str(self.invoice_detail)
-
-
 
 
 class Finance_out(models.Model):
@@ -87,6 +80,7 @@ class Finance_out(models.Model):
     salary_process = models.CharField(max_length=20)
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
     final = models.IntegerField(null=True, blank=True)
+    
     def __str__(self):
         return str(self.amount)
 
@@ -115,7 +109,6 @@ class Insurance(models.Model):
     def __str__(self) -> str:
         return str(self.policy_no)
         
-
 
 # class Salary_breakup(models.Model):
 #     basic_sal = models.IntegerField(default=0)(20)
@@ -170,8 +163,7 @@ class Payroll(models.Model):
     graduation = models.CharField(max_length=20, choices=User_choices, default="ug")
     dob = models.DateField()
     doj = models.DateField()
-    probation_days = models.IntegerField(default=90)
-    # probation_period = models.DateField()
+    probation_days = models.IntegerField(default=90)    
     evalution = models.ForeignKey(Evaluation, on_delete=models.CASCADE)
     insurance = models.ForeignKey(Insurance, on_delete=models.CASCADE)
     # salary_break = models.ForeignKey(Salary_breakup, on_delete=models.CASCADE)s

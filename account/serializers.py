@@ -46,7 +46,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ('payment_date', 'related_model_id', 'payment_ref_no', 'received_transfer')
 
-f
+
 # class BillSerializer(serializers.ModelSerializer):
 #     related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
 
