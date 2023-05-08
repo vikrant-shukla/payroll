@@ -36,39 +36,43 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Invoice
-        fields = ('invoice_no', 'invoice_date', 'related_model_id','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
+        fields = '__all__'
+        # fields = ('invoice_no', 'invoice_date', 'related_model_id','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
 
 
 class PaymentSerializer(serializers.ModelSerializer):
     related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
     class Meta:
         model = Payment
-        fields = ('payment_date', 'related_model_id', 'payment_ref_no', 'received_transfer')
+        fields = '__all__'
+        # fields = ('payment_date', 'related_model_id', 'payment_ref_no', 'received_transfer')
 
 
 class BillSerializer(serializers.ModelSerializer):
-    related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
+    # related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
     class Meta:
         model = Bill
-        fields = ('related_model_id', 'rent_bill', 'food_bill', 'paper_bill', 'water_bill', 'electricity_bill', 'other_bill')
+        fields = '__all__'
+        # fields = ('related_model_id', 'bill_no', 'bill_date', 'bill_amount', 'bill_type')
 
 
 class FinanceOutSerializer(serializers.ModelSerializer):
-    invoice = serializers.SerializerMethodField()
-    payment = serializers.SerializerMethodField()
-    bill = serializers.SerializerMethodField()
+    # invoice = serializers.SerializerMethodField()
+    # payment = serializers.SerializerMethodField()
+    # bill = serializers.SerializerMethodField()
 
-    def get_invoice(self, instance):
-        return InvoiceSerializer(instance=instance.invoice_detail).data
+    # def get_invoice(self, instance):
+    #     return InvoiceSerializer(instance=instance.invoice_detail).data
 
-    def get_payment(self, instance):
-        return PaymentSerializer(instance=instance.payment_detail).data
+    # def get_payment(self, instance):
+    #     return PaymentSerializer(instance=instance.payment_detail).data
 
-    def get_bill(self, instance):
-        return BillSerializer(instance=instance.bills).data
+    # def get_bill(self, instance):
+    #     return BillSerializer(instance=instance.bills).data
     class Meta:
         model = Finance_out
-        fields = ('amount', 'ref_no', 'invoice', 'payment','tds_tax', 'bill', 'salary_process')
+        fields = '__all__'
+        # fields = ('amount', 'ref_no', 'invoice', 'payment','tds_tax', 'bill', 'salary_process')
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
@@ -80,17 +84,18 @@ class FinanceOutSerializer(serializers.ModelSerializer):
 
 
 class FinanceInSerializer(serializers.ModelSerializer):
-    invoice = serializers.SerializerMethodField()
-    payment = serializers.SerializerMethodField()
+    # invoice = serializers.SerializerMethodField()
+    # payment = serializers.SerializerMethodField()
 
-    def get_invoice(self, instance):
-        return InvoiceSerializer(instance=instance.invoice_detail).data
-    def get_payment(self, instance):
-        return PaymentSerializer(instance=instance.payment_detail).data
+    # def get_invoice(self, instance):
+    #     return InvoiceSerializer(instance=instance.invoice_detail).data
+    # def get_payment(self, instance):
+    #     return PaymentSerializer(instance=instance.payment_detail).data
         
     class Meta:
         model = Finance_in
-        fields = ('amount', 'ref_no', 'invoice', 'payment', 'tds_tax')
+        fields = '__all__'
+        # fields = ('amount', 'ref_no', 'invoice', 'payment', 'tds_tax')
 
     def to_representation(self, instance):
 
