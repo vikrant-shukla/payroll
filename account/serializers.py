@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from importlib import resources
 
 from django.contrib.auth.hashers import make_password
@@ -55,6 +56,15 @@ class BillSerializer(serializers.ModelSerializer):
         fields = '__all__'
         # fields = ('related_model_id', 'bill_no', 'bill_date', 'bill_amount', 'bill_type')
 
+
+#     def create(self, validated_data):
+#         amount = 0
+#         for k,bill_value in validated_data.items():
+#             amount +=bill_value
+#         instance =  super().create(validated_data)
+#         instance.result = amount
+#         instance.save()
+#         return instance
 
 class FinanceOutSerializer(serializers.ModelSerializer):
     # invoice = serializers.SerializerMethodField()
@@ -144,9 +154,32 @@ class EvaluationSerializer(serializers.ModelSerializer):
 
 
 class PayrollSerializer(serializers.ModelSerializer):
+    probation_period = serializers.SerializerMethodField()
+    
+
     class Meta:
         model = Payroll
-        fields = '__all__'
+        fields = ['firstname','lastname', 'fathername','mothername',
+                'adhar_no','adhar_attach','pan_no', 'pan_attach', 
+                'marksheet_attach', 'graduation', 'dob', 'doj',
+                'evalution','insurance','probation_period']
+
+    # def get_probation_period(self, obj):
+    #     probation_days = 90 # adjust as needed
+    #     start_date = obj.doj
+    #     end_date = start_date + timedelta(days=probation_days)
+    #     today = date.today()
+    #     days_left = (end_date - today).days
+    #     return days_left
+    
+
+    def get_probation_period(self, obj):
+        probation_days = obj.probation_days
+        start_date = obj.doj
+        end_date = start_date + timedelta(days=probation_days)
+        return end_date
+    
+    
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
