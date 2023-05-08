@@ -115,10 +115,7 @@ class FinanceOutAPI(APIView):
         serializer = FinanceOutSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            invoice = Invoice.objects.all()
-            bills = Bill.objects.all()
-            total_bill_amount = sum([bill.bill_amount for bill in bills]) + sum([invoice.invoice_amount - invoice.deduction for invoice in invoice])
-            return Response({"data":serializer.data,"total_bill_amount":total_bill_amount} ,status=status.HTTP_201_CREATED)
+            return Response({"data":serializer.data} ,status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
