@@ -1,22 +1,12 @@
-import csv
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from django.shortcuts import redirect
-from rest_framework import status, generics
+from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from account.serializers import *
 from rest_framework import viewsets
-from django.http import HttpResponse
 from rest_framework.views import APIView
-import pandas as pd
 from django.http import HttpResponse
 import openpyxl
-
-
-# Create your views here.
 
 
 class RegisterAPI(APIView):
@@ -64,8 +54,10 @@ class BillApiView(APIView):
     def get(self, request):
         bills = Bill.objects.all()
         total_amount = sum([bill.bill_amount for bill in bills])
-        return Response({'total_amount': total_amount})
-  
+        return Response({"message": total_amount}, status=status.HTTP_201_CREATED)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # return Response({'total_amount': total_amount})
+
 
 class InvoiceApiView(APIView):
     def get(self, request):
@@ -75,7 +67,6 @@ class InvoiceApiView(APIView):
             query = Invoice.objects.filter(id=query_parameter['id'])
         else:
             query = Invoice.objects.all()
-
         serializer = InvoiceSerializer(query, many=True)
         return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
@@ -83,11 +74,28 @@ class InvoiceApiView(APIView):
         serializer = InvoiceSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
+            in_amount,out_amount,flag = 0,0,False
+            for inv in Invoice.objects.all():
+                if inv.received_transfer == 'out':
+                    out_amount += inv.invoice_amount - inv.deduction
+                    flag = True
+                else:
+                    in_amount += inv.invoice_amount - inv.deduction
+            if flag == True:
+                for bill in Bill.objects.all():
+                    out_amount+= bill.bill_amount
+   
+            return Response({"message": serializer.data, "in_amount":in_amount, "out_amount":out_amount }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PaymentApiView(APIView):
+
+    def get(self, request):
+        books = Payment.objects.all()
+        serializer = PaymentSerializer(books, many=True)
+        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+
     def post(self, request):
         serializer = PaymentSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -102,12 +110,16 @@ class FinanceOutAPI(APIView):
         serializer = FinanceOutSerializer(books, many=True)
         return Response(serializer.data)
 
-    # def post(self, request):
-    #     serializer = FinanceOutSerializer(data=request.data)
-    #     if serializer.is_valid(raise_exception=True):
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        serializer = FinanceOutSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            invoice = Invoice.objects.all()
+            bills = Bill.objects.all()
+            total_bill_amount = sum([bill.bill_amount for bill in bills]) + sum([invoice.invoice_amount - invoice.deduction for invoice in invoice])
+            return Response({"data":serializer.data,"total_bill_amount":total_bill_amount} ,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -145,24 +157,10 @@ class PostGraduationApi(viewsets.ModelViewSet):
     queryset = PostGraduation.objects.all()
     serializer_class = PostGraduationSerializer
 
-    # def post(self, request):
-    #     serializer = PostGraduationSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response({'message':  serializer.data}, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class MarksheetApi(viewsets.ModelViewSet):
     queryset = Marksheet.objects.all()
     serializer_class = MarksheetSerializer
-
-    # def post(self, request):
-    #     serializer = MarksheetSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response({'message': serializer.data }, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class InsuranceAPI(APIView):
@@ -171,7 +169,7 @@ class InsuranceAPI(APIView):
     def get(self, request):
         books = Insurance.objects.all()
         serializer = InsuranceSerializer(books, many=True)
-        return Response(id.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = InsuranceSerializer(data=request.data)
@@ -213,8 +211,6 @@ class PayrollAPI(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class ExcelExportView(APIView):
     def get(self, request):
         response = HttpResponse(content_type='application/ms-excel')
@@ -246,20 +242,19 @@ class ExcelExportView(APIView):
         for i, row in enumerate(serializer.data, start=2):
             worksheet.cell(row=i, column=1, value=row['amount'])
             worksheet.cell(row=i, column=2, value=row['ref_no'])
-            worksheet.cell(row=i, column=3, value=row['invoice']['invoice_no'])
-            worksheet.cell(row=i, column=4, value=row['invoice']['invoice_date'])
-            worksheet.cell(row=i, column=5, value=row['invoice']['invoice_amount'])
-            worksheet.cell(row=i, column=6, value=row['invoice']['deduction'])
-            worksheet.cell(row=i, column=7, value=row['invoice']['deduction_reason'])
-            worksheet.cell(row=i, column=8, value=row['invoice']['received_transfer'])
-            worksheet.cell(row=i, column=9, value=row['payment']['payment_date'])
-            worksheet.cell(row=i, column=10, value=row['payment']['payment_ref_no'])
-            worksheet.cell(row=i, column=11, value=row['payment']['received_transfer'])
+            worksheet.cell(row=i, column=3, value=row['invoice_detail']['invoice_no'])
+            worksheet.cell(row=i, column=4, value=row['invoice_detail']['invoice_date'])
+            worksheet.cell(row=i, column=5, value=row['invoice_detail']['invoice_amount'])
+            worksheet.cell(row=i, column=6, value=row['invoice_detail']['deduction'])
+            worksheet.cell(row=i, column=7, value=row['invoice_detail']['deduction_reason'])
+            worksheet.cell(row=i, column=8, value=row['invoice_detail']['received_transfer'])
+            worksheet.cell(row=i, column=9, value=row['payment_detail']['payment_date'])
+            worksheet.cell(row=i, column=10, value=row['payment_detail']['payment_ref_no'])
+            worksheet.cell(row=i, column=11, value=row['payment_detail']['received_transfer'])
             worksheet.cell(row=i, column=12, value=row['tds_tax'])
 
         workbook.save(response)
         return response
-
 
 
 class ExcelExport(APIView):
@@ -283,14 +278,11 @@ class ExcelExport(APIView):
         worksheet['J1'] = 'payment_ref_no'
         worksheet['K1'] = 'received_transfer'
         worksheet['L1'] = 'Tdx'
-        worksheet['M1'] = 'rent_bill'
-        worksheet['N1'] = 'food_bill'
-        worksheet['O1'] = 'paper_bill'
-        worksheet['P1'] = 'water_bill'
-        worksheet['Q1'] = 'electricity_bill'
-        worksheet['R1'] = 'other_bill'
-        worksheet['S1'] = 'Salary process'
-
+        worksheet['M1'] = 'Bill Number'
+        worksheet['N1'] = 'Bill Date'
+        worksheet['O1'] = 'Bill Amount'
+        worksheet['P1'] = 'Bill Type'
+        worksheet['Q1'] = 'Salary process'
 
 
         # Get data
@@ -300,26 +292,21 @@ class ExcelExport(APIView):
         for i, row in enumerate(serializer.data, start=2):
             worksheet.cell(row=i, column=1, value=row['amount'])
             worksheet.cell(row=i, column=2, value=row['ref_no'])
-            worksheet.cell(row=i, column=3, value=row['invoice']['invoice_no'])
-            worksheet.cell(row=i, column=4, value=row['invoice']['invoice_date'])
-            worksheet.cell(row=i, column=5, value=row['invoice']['invoice_amount'])
-            worksheet.cell(row=i, column=6, value=row['invoice']['deduction'])
-            worksheet.cell(row=i, column=7, value=row['invoice']['deduction_reason'])
-            worksheet.cell(row=i, column=8, value=row['invoice']['received_transfer'])
-            worksheet.cell(row=i, column=9, value=row['payment']['payment_date'])
-            worksheet.cell(row=i, column=10, value=row['payment']['payment_ref_no'])
-            worksheet.cell(row=i, column=11, value=row['payment']['received_transfer'])
+            worksheet.cell(row=i, column=3, value=row['invoice_detail']['invoice_no'])
+            worksheet.cell(row=i, column=4, value=row['invoice_detail']['invoice_date'])
+            worksheet.cell(row=i, column=5, value=row['invoice_detail']['invoice_amount'])
+            worksheet.cell(row=i, column=6, value=row['invoice_detail']['deduction'])
+            worksheet.cell(row=i, column=7, value=row['invoice_detail']['deduction_reason'])
+            worksheet.cell(row=i, column=8, value=row['invoice_detail']['received_transfer'])
+            worksheet.cell(row=i, column=9, value=row['payment_detail']['payment_date'])
+            worksheet.cell(row=i, column=10, value=row['payment_detail']['payment_ref_no'])
+            worksheet.cell(row=i, column=11, value=row['payment_detail']['received_transfer'])
             worksheet.cell(row=i, column=12, value=row['tds_tax'])
-            worksheet.cell(row=i, column=13, value=row['bill']['rent_bill'])
-            worksheet.cell(row=i, column=14, value=row['bill']['food_bill'])
-            worksheet.cell(row=i, column=15, value=row['bill']['paper_bill'])
-            worksheet.cell(row=i, column=16, value=row['bill']['water_bill'])
-            worksheet.cell(row=i, column=17, value=row['bill']['electricity_bill'])
-            worksheet.cell(row=i, column=18, value=row['bill']['other_bill'])
-            worksheet.cell(row=i, column=19, value=row['salary_process'])
+            worksheet.cell(row=i, column=13, value=row['bills']['bill_no'])
+            worksheet.cell(row=i, column=14, value=row['bills']['bill_date'])
+            worksheet.cell(row=i, column=15, value=row['bills']['bill_amount'])
+            worksheet.cell(row=i, column=16, value=row['bills']['bill_type'])
+            worksheet.cell(row=i, column=17, value=row['salary_process'])
 
         workbook.save(response)
         return response
-    
-
-
