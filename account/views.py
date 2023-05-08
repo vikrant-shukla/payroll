@@ -75,9 +75,18 @@ class InvoiceApiView(APIView):
         serializer = InvoiceSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            invoice = Invoice.objects.all()
-            total_amount = sum([invoice.invoice_amount - invoice.deduction for invoice in invoice])
-            return Response({"message": serializer.data, "total_amount":total_amount}, status=status.HTTP_201_CREATED)
+            in_amount,out_amount,flag = 0,0,False
+            for inv in Invoice.objects.all():
+                if inv.received_transfer == 'out':
+                    out_amount += inv.invoice_amount - inv.deduction
+                    flag = True
+                else:
+                    in_amount += inv.invoice_amount - inv.deduction
+            if flag == True:
+                for bill in Bill.objects.all():
+                    out_amount+= bill.bill_amount
+   
+            return Response({"message": serializer.data, "in_amount":in_amount, "out_amount":out_amount }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -106,7 +115,10 @@ class FinanceOutAPI(APIView):
         serializer = FinanceOutSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            invoice = Invoice.objects.all()
+            bills = Bill.objects.all()
+            total_bill_amount = sum([bill.bill_amount for bill in bills]) + sum([invoice.invoice_amount - invoice.deduction for invoice in invoice])
+            return Response({"data":serializer.data,"total_bill_amount":total_bill_amount} ,status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
