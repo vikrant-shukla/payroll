@@ -16,7 +16,7 @@ router.register('files',MarksheetApi, basename='files')
 urlpatterns = [
     path('register/', views.RegisterAPI.as_view()),
     path('login/', views.LoginAPI.as_view(), name='login'),
-    path('addaccount/', views.AddAccountApi.as_view(), name='login'),
+    path('addaccount/', views.AddAccountApi.as_view(), name='addaccount'),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="RefreshToken"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="RefreshToken"),
     path('financeout/', views.FinanceOutAPI.as_view(), name='financeout'),
