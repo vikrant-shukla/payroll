@@ -15,6 +15,7 @@ class RegisterAPI(APIView):
     def post(self, request):
         """so save the details and generating the user id"""
         serializer = UserTableSerializer(data=request.data)
+        print("hii")
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'successfully registered'}, status=status.HTTP_201_CREATED)

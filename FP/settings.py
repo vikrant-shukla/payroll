@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-^=il@o3q+f&ow@%l0atx*iqt&5uhe(-p$(b0($8_%m(cebzq_j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'account',
     'rest_framework',
     'rest_framework_simplejwt',
+    'corsheaders',
 
 ]
 
@@ -52,6 +53,7 @@ AUTH_USER_MODEL = 'account.UserTable'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -79,6 +81,31 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'FP.wsgi.application'
+
+CORS_ALLOW_ALL_ORIGINS=True
+
+CORS_ALLOW_CREDENTIALS = True
+
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
