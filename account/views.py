@@ -7,6 +7,7 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from django.http import HttpResponse
 import openpyxl
+import random
 
 
 class RegisterAPI(APIView):
@@ -31,8 +32,13 @@ class AddAccountApi(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        books = Add_account.objects.all()
-        serializer = AddAccountSerializer(books, many=True)
+        query_parameter = request.query_params
+        data = query_parameter['id'] if len(query_parameter) != 0 else False
+        if data:
+            query = Add_account.objects.filter(id=query_parameter['id'])
+        else:
+            query = Add_account.objects.all()
+        serializer = AddAccountSerializer(query, many=True)
         return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
