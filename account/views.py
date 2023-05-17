@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from account.functionalities import random_number
 from account.serializers import *
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -49,6 +50,8 @@ class AddAccountApi(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class BillApiView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def post(self, request):
         serializer = BillSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -66,6 +69,8 @@ class BillApiView(APIView):
 
 
 class InvoiceApiView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request):
         query_parameter = request.query_params
         data = query_parameter['id'] if len(query_parameter) != 0 else False
@@ -76,12 +81,23 @@ class InvoiceApiView(APIView):
         serializer = InvoiceSerializer(query, many=True)
         return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
+
+    
     def post(self, request):
-        serializer = InvoiceSerializer(data=request.data)
+        invoice_no = random_number()
+        data = {
+            "invoice_date":request.data['invoice_date'],
+            "invoice_amount": request.data['invoice_amount'],
+            "deduction": request.data['deduction'],
+            "deduction_reason": request.data['deduction_reason'],
+            "received_transfer":request.data['received_transfer'],
+            "invoice_no": invoice_no
+        }
+        serializer = InvoiceSerializer(data=data)      
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             in_amount,out_amount,flag = 0,0,False
-            for inv in Invoice.objects.all():
+            for inv in Invoice.objects.all() :
                 if inv.received_transfer == 'out':
                     out_amount += inv.invoice_amount - inv.deduction
                     flag = True
@@ -96,6 +112,7 @@ class InvoiceApiView(APIView):
 
 
 class PaymentApiView(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         books = Payment.objects.all()
@@ -111,6 +128,8 @@ class PaymentApiView(APIView):
 
 
 class FinanceOutAPI(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request):
         books = Finance_out.objects.all()
         serializer = FinanceOutSerializer(books, many=True)
@@ -137,6 +156,8 @@ class FinanceOutAPI(APIView):
     #     return Response(serializer.data)
 
 class FinanceInApi(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request):
         pym = Finance_in.objects.all()
         serializer = FinanceInSerializer(pym, many=True)
@@ -151,17 +172,23 @@ class FinanceInApi(APIView):
 
 
 class Graduation_detailsViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     permission_classes = [IsAuthenticated, ]
     queryset = Graduation_details.objects.all()
     serializer_class = Graduation_detailsSerializer
 
 
 class PostGraduationApi(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = PostGraduation.objects.all()
     serializer_class = PostGraduationSerializer
 
 
 class MarksheetApi(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = Marksheet.objects.all()
     serializer_class = MarksheetSerializer
 
