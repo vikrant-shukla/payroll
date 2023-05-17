@@ -52,7 +52,7 @@ class Invoice(models.Model):
 class Payment(models.Model):
     payment_date = models.DateField()
     payment_ref_no = models.IntegerField(default=0, unique=True)
-    received_transfer = models.CharField(max_length=20, choices=amount_state)
+    received_payment_transfer = models.CharField(max_length=20, choices=amount_state)
 
     def __str__(self):
         return str(self.payment_ref_no)

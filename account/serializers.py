@@ -32,13 +32,14 @@ class AddAccountSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class InvoiceSerializer(serializers.ModelSerializer):
-    related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
+class InvoiceSerializer(serializers.ModelSerializer):    
+    # related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
+    
 
     class Meta:
         model = Invoice
-        fields = '__all__'
-        # fields = ('invoice_no', 'invoice_date', 'related_model_id','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
+        # fields = '__all__',
+        fields = ('invoice_no', 'invoice_date','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
 
 
 class PaymentSerializer(serializers.ModelSerializer):
