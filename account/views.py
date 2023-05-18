@@ -118,8 +118,13 @@ class PaymentApiView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        books = Payment.objects.all()
-        serializer = PaymentSerializer(books, many=True)
+        query_parameter = request.query_params
+        data = query_parameter['id'] if len(query_parameter) != 0 else False
+        if data:
+            query = Payment.objects.filter(id=query_parameter['id'])
+        else:
+            query = Payment.objects.all()
+        serializer = PaymentSerializer(query, many=True)
         return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
