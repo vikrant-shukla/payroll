@@ -9,6 +9,9 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 import openpyxl
 import random
+import pandas as pd
+from rest_framework.views import APIView
+from .models import MyModel
 
 
 class RegisterAPI(APIView):
@@ -340,3 +343,19 @@ class ExcelExport(APIView):
 
         workbook.save(response)
         return response
+    
+
+class ExcelUploadView(APIView):
+    def post(self, request, format=None):
+        serializer = ExcelUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        file = serializer.validated_data['file']
+        df = pd.read_excel(file)  # Read the Excel file using pandas
+        # Iterate over the rows and save each row as a new instance of the model
+        for index, row in df.iterrows():
+            MyModel.objects.create(
+                column1=row['Column1'],
+                column2=row['Column2'],
+                # Add more fields as needed
+            )
+        return Response({'message': 'Data uploaded successfully'})

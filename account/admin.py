@@ -21,4 +21,6 @@ admin.site.register(Graduation_details)
 admin.site.register(PostGraduation)
 admin.site.register(Marksheet)
 admin.site.register(Payroll)
+admin.site.register(MyModel)
+
 

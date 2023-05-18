@@ -176,3 +176,7 @@ class Payroll(models.Model):
     evalution = models.ForeignKey(Evaluation, on_delete=models.CASCADE)
     insurance = models.ForeignKey(Insurance, on_delete=models.CASCADE)
     # salary_break = models.ForeignKey(Salary_breakup, on_delete=models.CASCADE)s
+    
+class MyModel(models.Model):
+    column1 = models.FileField(upload_to="files", blank=True, null=True)
+    column2 = models.FileField(upload_to="files", blank=True, null=True)
