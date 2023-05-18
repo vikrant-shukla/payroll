@@ -39,7 +39,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         # fields = '__all__',
-        fields = ('invoice_no', 'invoice_date','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
+        fields = ('id','invoice_no', 'invoice_date','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -189,3 +189,10 @@ class PayrollSerializer(serializers.ModelSerializer):
         response['insurance'] = InsuranceSerializer(instance.insurance).data
         # response['account'] = AddAccountSerializer(instance.account).data
         return response
+    
+class ExcelUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+    def validate_file(self, value):
+        # Add any validation logic for the file, if required
+        # For example: check file extension, file size, etc.
+        return value

@@ -6,6 +6,8 @@ from django.conf import settings
 from account.views import Graduation_detailsViewSet, PostGraduationApi, MarksheetApi, ExcelExportView, ExcelExport
 from rest_framework.routers import DefaultRouter
 from account import views
+from .views import ExcelUploadView
+
 
 router=DefaultRouter()
 router.register('files',Graduation_detailsViewSet, basename='files')
@@ -33,6 +35,7 @@ urlpatterns = [
     path ('api/', include(router.urls)),
     path('exportin/', ExcelExportView.as_view(), name='export'),
     path('exportout/', ExcelExport.as_view(), name='export'),
+    path('upload/', ExcelUploadView.as_view(), name='upload'),
 
 
 ] 
