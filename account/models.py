@@ -3,17 +3,17 @@ from django.contrib.auth.models import AbstractUser
 from account.manager import CustomManager
 
 
-class UserTable(AbstractUser):
+class UserTable(AbstractUser):    
     username = None
     first_name = None
     last_name = None
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
-    firstname = models.CharField(max_length=20)
-    lastname = models.CharField(max_length=20)
+    firstname = models.CharField(max_length=65)
+    lastname = models.CharField(max_length=15)
     email = models.EmailField(unique=True)
-    mob = models.IntegerField(default=0)
-    password = models.CharField(max_length=15)
+    mob = models.BigIntegerField(max_length=13)
+    password = models.CharField(max_length=200)
     object_manager = CustomManager()
 
     def __str__(self):
@@ -22,10 +22,10 @@ class UserTable(AbstractUser):
 
 class Add_account(models.Model):
     # id = models.IntegerField(primary_key=True)
-    acc_no = models.IntegerField(default=0, unique=True)
-    ifsc = models.CharField(max_length=20)
-    current_bal = models.IntegerField(default=0)
-    current_due = models.IntegerField(default=0)
+    acc_no = models.CharField(default=0, unique=True)
+    ifsc = models.CharField(max_length=15)
+    current_bal = models.CharField(default=0)
+    current_due = models.CharField(default=0)
 
     def __str__(self):
         return str(self.acc_no)
@@ -38,10 +38,10 @@ amount_state = (
 
 
 class Invoice(models.Model):
-    invoice_no = models.IntegerField(default=0, unique=True)
+    invoice_no = models.BigIntegerField( unique=True)
     invoice_date = models.DateField()
-    invoice_amount = models.IntegerField(default=0)
-    deduction = models.IntegerField(default=0)
+    invoice_amount = models.BigIntegerField(default=0)
+    deduction = models.BigIntegerField(default=0)
     deduction_reason = models.CharField(max_length=200)
     received_transfer = models.CharField(max_length=20, choices=amount_state)
 
@@ -56,15 +56,27 @@ class Payment(models.Model):
 
     def __str__(self):
         return str(self.payment_ref_no)
+    
+class Vendor(models.Model):
+    vendor_name=models.CharField(max_length=30)
+    vendor_address=models.CharField(max_length=100)
+    vendor_mobileno=models.IntegerField()
+    vendor_GSTno=models.CharField(max_length=15)
+    vendor_PanCard=models.CharField(max_length=10)
+    vendor_TDS=models.IntegerField()
+    
+    def __str__(self):
+        return str(self.vendor_name)
 
 
 class Finance_in(models.Model):
-    amount = models.IntegerField(default=0)
+    amount = models.BigIntegerField(default=0, unique=True)
     ref_no = models.IntegerField(default=0, unique=True)
     invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True )
     payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
     tds_tax = models.IntegerField(default=0)
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
+    vendor=models.ForeignKey(Vendor, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return str(self.invoice_detail)
@@ -89,6 +101,8 @@ class Finance_out(models.Model):
     salary_process = models.CharField(max_length=20)
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
     final = models.IntegerField(null=True, blank=True)
+    vendor=models.ForeignKey(Vendor, on_delete=models.CASCADE, blank=True, null=True)
+
     
     def __str__(self):
         return str(self.amount)
@@ -159,12 +173,12 @@ User_choices = (
 
 
 
-class Payroll(models.Model):
+class Payroll(models.Model):    
     firstname = models.CharField(max_length=20)
     lastname = models.CharField(max_length=20)
     fathername = models.CharField(max_length=20)
     mothername = models.CharField(max_length=20)
-    adhar_no = models.IntegerField(default=0)
+    adhar_no = models.BigIntegerField(default=0)
     adhar_attach = models.FileField(upload_to="files", blank=True, null=True)
     pan_no = models.CharField(max_length=15)
     pan_attach = models.FileField(upload_to="files", blank=True, null=True)

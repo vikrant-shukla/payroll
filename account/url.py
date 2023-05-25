@@ -18,6 +18,7 @@ router.register('files',MarksheetApi, basename='files')
 urlpatterns = [
     path('register/', views.RegisterAPI.as_view()),
     path('login/', views.LoginAPI.as_view(), name='login'),
+    # path('ChangePassword/', views.ChangePasswordView.as_view(), name='ChangePassword'),
     path('addaccount/', views.AddAccountApi.as_view(), name='addaccount'),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="RefreshToken"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="RefreshToken"),
@@ -26,6 +27,7 @@ urlpatterns = [
     path('bill/', views.BillApiView.as_view(), name='addition'),
     path('payment/', views.PaymentApiView.as_view(), name='payment'),
     path('invoice/', views.InvoiceApiView.as_view(), name='invoice'),
+    path('vendor/', views.VendorApiView.as_view(),name='vendor'),
     path('payroll/', views.PayrollAPI.as_view(), name='payroll'),
     path('marksheet/', views.MarksheetApi.as_view({'get':'list','post':'create'}), name='marksheet'),
     path('garduationmarksheet/', views.Graduation_detailsViewSet.as_view({'get':'list','post':'create'}), name='garduationmarksheet'),

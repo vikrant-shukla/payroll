@@ -1,3 +1,4 @@
+from email import message
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -8,10 +9,14 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from django.http import HttpResponse
 import openpyxl
-import random
 import pandas as pd
 from rest_framework.views import APIView
 from .models import MyModel
+# from django.core.mail import send_mail
+# from django.contrib.auth.tokens import default_token_generator
+# from rest_framework import generics
+
+
 
 
 class RegisterAPI(APIView):
@@ -30,7 +35,59 @@ class LoginAPI(TokenObtainPairView):
     """Api for user to login into project"""
     permission_classes = (AllowAny,)
     serializer_class = AuthTokenSerializer
+    
+    
+# class ChangePasswordView(generics.UpdateAPIView):
+    
+#     serializer_class = ChangePasswordSerializer
+#     model = UserTable
+#     permission_classes = (IsAuthenticated,)
 
+#     def get_object(self, queryset=None):
+#         obj = self.request.AbstractUser
+#         return obj
+
+#     def update(self, request, *args, **kwargs):
+#         self.object = self.get_object()
+#         serializer = self.get_serializer(data=request.data)
+
+#         if serializer.is_valid():
+#             # Check old password
+#             if not self.object.check_password(serializer.data.get("old_password")):
+#                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+#             # set_password also hashes the password that the user will get
+#             self.object.set_password(serializer.data.get("new_password"))
+#             self.object.save()
+#             response = {
+#                 'status': 'success',
+#                 'code': status.HTTP_200_OK,
+#                 'message': 'Password updated successfully',
+#                 'data': []
+#             }
+
+#             return Response(response)
+
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+
+    # def post (AbstractUser):
+    #     token = default_token_generator.make_token(AbstractUser)
+    #     return token
+    
+    # def generate_password_reset_link(AbstractUser, token):
+    #     reset_link = f"https://example.com/reset-password/?token={token}"
+    #     return reset_link
+
+    # def send_password_reset_email(AbstractUser, reset_link):
+    #     message = f"Click the link to reset your password: {reset_link}"
+    #     send_mail("Password Reset", message, "from@example.com", [AbstractUser.email])
+    
+    # def reset_password(token, new_password):
+    #     user = UserTable.objects.get(auth_token=token)
+    #     if default_token_generator.check_token(AbstractUser, token):
+    #         user.set_password(new_password)
+    #         user.save()
+    #         return Response({'sent'}, status=status.HTTP_200_OK)
+        
 
 class AddAccountApi(APIView):
     permission_classes = (IsAuthenticated,)
@@ -132,6 +189,26 @@ class PaymentApiView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VendorApiView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        query_parameter = request.query_params
+        data = query_parameter['id'] if len(query_parameter) != 0 else False
+        if data:
+            query = Vendor.objects.filter(id=query_parameter['id'])
+        else:
+            query = Vendor.objects.all()
+        serializer = VendorSerializers(query, many=True)
+        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = VendorSerializers(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
