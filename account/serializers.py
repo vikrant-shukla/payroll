@@ -18,11 +18,28 @@ class UserTableSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['email'] = validated_data['email'].lower()
         validated_data['password'] = make_password(validated_data['password'])
-        validated_data['firstname'] = (validated_data['firstname']).isalpha()
-        validated_data['lastname'] = (validated_data['lastname'])
-        validated_data['mob'] = (validated_data['mob']) 
+        # validated_data['firstname'] = (validated_data['firstname']).isalpha()
+        # validated_data['lastname'] = (validated_data['lastname'])
+        # validated_data['mob'] = (validated_data['mob']) 
         return super(UserTableSerializer, self).create(validated_data)
-
+    
+    def validate(self,data):
+        firstname=data.get('firstname')
+        lastname=data.get('lastname')
+        email=data.get('email')
+        password=data.get('password')
+        mob=str(data.get('mob'))
+        if not re.match(r'^[A-Za-z]{1,30}$', firstname):
+            raise serializers.ValidationError("enter valid name")
+        if not re.match(r'^[A-Za-z]{1,30}$', lastname):
+            raise serializers.ValidationError('Enter a valid name')
+        if not re.match(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$', email):
+            raise serializers.ValidationError('Enter a email.')
+        if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()-_=+{}[\]|\\:;<>,.?/~]).{6,}$', password):
+            raise serializers.ValidationError('Enter a password.')
+        if not mob.isdigit() or len(mob)>10 or int(mob[0])<6:
+            raise serializers.ValidationError('Enter a valid mob.no.')
+        return data
 
 class AuthTokenSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -31,6 +48,63 @@ class AuthTokenSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         return token
     
+class OtpVerificationSerializer(serializers.ModelSerializer):
+    otp = serializers.CharField(min_length=6, max_length=6)
+    email = serializers.EmailField()
+
+    class Meta:
+        model = Otp
+        fields = '__all__'
+
+    def validate_otp(self, otp):
+        if otp:
+            if Otp.objects.filter(otp=otp).exists():
+                user_instance = UserTable.objects.get(email=self.instance["email"])
+                if Otp.objects.get(email=user_instance.pk):
+                    return otp
+                raise serializers.ValidationError('OTP does not matched')
+            raise serializers.ValidationError('OTP does not exits.')
+        raise serializers.ValidationError('Please generate Otp again!!!')
+
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=6, max_length=20)
+    email = serializers.EmailField()
+
+    class Meta:
+        model = Otp
+        fields = '__all__'
+
+    def validate_email(self, email):
+        user_instance = UserTable.objects.get(email=email)
+        print(user_instance.email)
+        if Otp.objects.filter(email_id=user_instance.pk).exists():
+            if Otp.objects.get(email_id=user_instance.pk):
+                return email
+        else:
+            return serializers.ValidationError('Email does not matched')
+
+# class resetpasswordSerializer(serializers.ModelSerializer):
+#     email=serializers.EmailField()
+#     password=serializers.CharField(max_length=100)
+#     class Meta:
+#         model=UserTable
+#         # fields='__all__'
+#         fields = ('email','password')
+        
+#     def save(self):
+#         username=self.validated_data['username']
+#         password=self.validated_data['password']
+#         #filtering out whethere username is existing or not, if your username is existing then if condition will allow your username
+#         if AbstractUser.objects.filter(username=username).exists():
+#         #if your username is existing get the query of your specific username 
+#             user=AbstractUser.objects.get(username=username)
+#             #then set the new password for your username
+#             user.set_password(password)
+#             user.save()
+#             return user
+#         else:
+#             raise serializers.ValidationError({'error':'please enter valid crendentials'})
 
 # class ChangePasswordSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -58,9 +132,9 @@ class AddAccountSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("enter valid account no")  
         if not re.match(r'^[A-Z]{4}0[0-9]{6}$', ifsc_c):
             raise serializers.ValidationError('Enter a valid IFSC code.')
-        if not re.match(r'^[0-9]*\.?[0-9]+$', c_bal):
+        if not re.match(r'^[0-9]*\.?[0-9]{2}+$', c_bal):
             raise serializers.ValidationError('Enter a valid balance.')
-        if not re.match(r'^[0-9]*\.?[0-9]+$', c_due):
+        if not re.match(r'^[0-9]*\.?[0-9]{2}+$', c_due):
             raise serializers.ValidationError('Enter a valid balance.')
         return data
             
@@ -72,7 +146,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         # fields = '__all__',
-        fields = ('id','invoice_no', 'invoice_date','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
+        fields = ('id','invoice_no','invoice_ref_no', 'invoice_date','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
 
 
 class PaymentSerializer(serializers.ModelSerializer):

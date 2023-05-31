@@ -12,7 +12,7 @@ class UserTable(AbstractUser):
     firstname = models.CharField(max_length=65)
     lastname = models.CharField(max_length=15)
     email = models.EmailField(unique=True)
-    mob = models.BigIntegerField(max_length=13)
+    mob = models.BigIntegerField(null=True)
     password = models.CharField(max_length=200)
     object_manager = CustomManager()
 
@@ -39,6 +39,7 @@ amount_state = (
 
 class Invoice(models.Model):
     invoice_no = models.BigIntegerField( unique=True)
+    invoice_ref_no = models.BigIntegerField( unique=True,null=True)
     invoice_date = models.DateField()
     invoice_amount = models.BigIntegerField(default=0)
     deduction = models.BigIntegerField(default=0)
@@ -194,3 +195,11 @@ class Payroll(models.Model):
 class MyModel(models.Model):
     column1 = models.FileField(upload_to="files", blank=True, null=True)
     column2 = models.FileField(upload_to="files", blank=True, null=True)
+    
+class Otp(models.Model):
+    email = models.ForeignKey(UserTable, on_delete=models.CASCADE)
+    otp = models.IntegerField(default=0, unique=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return str(self.otp)

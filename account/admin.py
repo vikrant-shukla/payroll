@@ -23,5 +23,7 @@ admin.site.register(Marksheet)
 admin.site.register(Payroll)
 admin.site.register(MyModel)
 admin.site.register(Vendor)
+admin.site.register(Otp)
+
 
 
