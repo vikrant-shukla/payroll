@@ -1,4 +1,6 @@
 from email import message
+import random
+from FP import settings
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -11,10 +13,12 @@ from django.http import HttpResponse
 import openpyxl
 import pandas as pd
 from rest_framework.views import APIView
-from .models import MyModel
-# from django.core.mail import send_mail
-# from django.contrib.auth.tokens import default_token_generator
-# from rest_framework import generics
+from .models import MyModel,Invoice
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework import generics
+from django.contrib.auth.models import AbstractUser
+
 
 
 
@@ -36,6 +40,75 @@ class LoginAPI(TokenObtainPairView):
     permission_classes = (AllowAny,)
     serializer_class = AuthTokenSerializer
     
+class SentMailView(APIView):
+    """Api to sent the otp to user mail  id to reset the password"""
+
+    def post(self, request):
+        """sending the otp to user mail id"""
+        try:
+            mail = UserTable.objects.get(email=request.data['email'])
+        except:
+            return Response({'error': 'Email does not exits.'}, status=status.HTTP_404_NOT_FOUND )
+        
+        
+
+        if Otp.objects.filter(email=mail).exists:
+            Otp.objects.filter(email=mail).delete()
+        otp = Otp.objects.create(email=mail)
+        otp.otp = random.randint(100000, 999999)
+        otp.save()
+        subject = 'Reset Your Password'
+        body = f'This is your OTP to reset password {otp.otp}'
+
+
+        try:
+            send_mail(subject, body, settings.EMAIL_HOST_USER, [mail.email], fail_silently=False)
+            return Response({"status": "mail sent "}, status=status.HTTP_201_CREATED)
+        except:
+            return Response({"status": "An error ocured. Try again!!!"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OtpVerification(APIView):
+    serializer_class = OtpVerificationSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data, instance=request.data)
+        if serializer.is_valid(raise_exception=True):
+            return Response({"otp": "verified"}, status=status.HTTP_200_OK)
+        return Response({"otp": "please generate otp again"}, status=status.HTTP_400_BAD_REQUEST)
+    
+class ResetPasswordview(generics.UpdateAPIView):
+    """Api to reset the password and storing the new password into database"""
+    if OtpVerificationSerializer:
+        serializer_class = SetNewPasswordSerializer
+
+        def post(self, request, *args, **kwargs):
+            """saving the new password of the user into database"""
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            request_email = request.data['email']
+            user_object = UserTable.objects.get(email=request_email)
+            if Otp.objects.filter(email_id=user_object.pk).exists():
+                if UserTable.objects.get(email=request_email):
+                    user_object.password = make_password(request.data['password'])
+                    user_object.save()
+                    otp_del = Otp.objects.filter(email=user_object.id)
+                    otp_del.delete()
+                    return Response({'status': 'password successfully changed'}, status=status.HTTP_201_CREATED)
+                return Response({'status': 'An error occured'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'An error occured'}, status=status.HTTP_400_BAD_REQUEST)
+    
+# class resetpassword(APIView):
+#     def post(self,request):
+#         serializer=resetpasswordSerializer(data=request.data)
+#         alldatas={}
+#         if serializer.is_valid(raise_exception=True):
+#             mname=serializer.save()
+#             alldatas['data']='successfully registered'
+#             print(alldatas)
+#             return Response(alldatas)
+#         return Response('failed retry after some time')
+    
     
 # class ChangePasswordView(generics.UpdateAPIView):
     
@@ -43,8 +116,8 @@ class LoginAPI(TokenObtainPairView):
 #     model = UserTable
 #     permission_classes = (IsAuthenticated,)
 
-#     def get_object(self, queryset=None):
-#         obj = self.request.AbstractUser
+#     def post (self, queryset=None):
+#         obj = self.request.User
 #         return obj
 
 #     def update(self, request, *args, **kwargs):
@@ -55,7 +128,6 @@ class LoginAPI(TokenObtainPairView):
 #             # Check old password
 #             if not self.object.check_password(serializer.data.get("old_password")):
 #                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-#             # set_password also hashes the password that the user will get
 #             self.object.set_password(serializer.data.get("new_password"))
 #             self.object.save()
 #             response = {
@@ -144,14 +216,15 @@ class InvoiceApiView(APIView):
 
     
     def post(self, request):
-        invoice_no = random_number()
+        invoice_ref_no = random_number()
         data = {
+            # "invoice_no":request.data['invoice_no'],
             "invoice_date":request.data['invoice_date'],
             "invoice_amount": request.data['invoice_amount'],
             "deduction": request.data['deduction'],
             "deduction_reason": request.data['deduction_reason'],
-            "received_transfer":request.data['received_transfer'],
-            "invoice_no": invoice_no
+            "received_transfer":request.data['received_transfer'],            
+            "invoice_ref_no": invoice_ref_no
         }
         serializer = InvoiceSerializer(data=data)      
         if serializer.is_valid(raise_exception=True):
@@ -159,6 +232,7 @@ class InvoiceApiView(APIView):
             in_amount,out_amount,flag = 0,0,False
             for inv in Invoice.objects.all() :
                 if inv.received_transfer == 'out':
+                    invoice_no = random_number()
                     out_amount += inv.invoice_amount - inv.deduction
                     flag = True
                 else:
@@ -167,7 +241,7 @@ class InvoiceApiView(APIView):
                 for bill in Bill.objects.all():
                     out_amount+= bill.bill_amount
    
-            return Response({"message": serializer.data, "in_amount":in_amount, "out_amount":out_amount }, status=status.HTTP_201_CREATED)
+            return Response({"message": serializer.data, "in_amount":in_amount, "out_amount":out_amount,"invoice_no":invoice_no }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -345,8 +419,17 @@ class ExcelExportView(APIView):
         worksheet['H1'] = 'received_transfer'
         worksheet['I1'] = 'payment_date'
         worksheet['J1'] = 'payment_ref_no'
-        worksheet['K1'] = 'received_transfer'
+        worksheet['K1'] = 'received_payment_transfer'
         worksheet['L1'] = 'Tds'
+        worksheet['M1'] = 'vendor_name'
+        worksheet['N1'] = 'vendor_address'
+        worksheet['O1'] = 'vendor_mobileno'
+        worksheet['P1'] = 'vendor_GSTno'
+        worksheet['Q1'] = 'vendor_PanCard'
+        worksheet['R1'] = 'vendor_TDS'
+        
+
+        
 
         # all_fields = Finance_in._meta.fields
 
@@ -365,8 +448,15 @@ class ExcelExportView(APIView):
             worksheet.cell(row=i, column=8, value=row['invoice_detail']['received_transfer'])
             worksheet.cell(row=i, column=9, value=row['payment_detail']['payment_date'])
             worksheet.cell(row=i, column=10, value=row['payment_detail']['payment_ref_no'])
-            worksheet.cell(row=i, column=11, value=row['payment_detail']['received_transfer'])
+            worksheet.cell(row=i, column=11, value=row['payment_detail']['received_payment_transfer'])
             worksheet.cell(row=i, column=12, value=row['tds_tax'])
+            worksheet.cell(row=i, column=13, value=row['vendor_detail']['vendor_name'])
+            worksheet.cell(row=i, column=14, value=row['vendor_detail']['vendor_address'])
+            worksheet.cell(row=i, column=15, value=row['vendor_detail']['vendor_mobileno'])
+            worksheet.cell(row=i, column=16, value=row['vendor_detail']['vendor_GSTno'])
+            worksheet.cell(row=i, column=17, value=row['vendor_detail']['vendor_PanCard'])
+            worksheet.cell(row=i, column=18, value=row['vendor_detail']['vendor_TDS'])
+
 
         workbook.save(response)
         return response
@@ -391,7 +481,7 @@ class ExcelExport(APIView):
         worksheet['H1'] = 'received_transfer'
         worksheet['I1'] = 'payment_date'
         worksheet['J1'] = 'payment_ref_no'
-        worksheet['K1'] = 'received_transfer'
+        worksheet['K1'] = 'received_payment_transfer'
         worksheet['L1'] = 'Tdx'
         worksheet['M1'] = 'Bill Number'
         worksheet['N1'] = 'Bill Date'
