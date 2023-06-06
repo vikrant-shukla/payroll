@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
-from account.functionalities import random_number
+from account.functionalities import random_number, random_number_payment
 from account.serializers import *
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -174,6 +174,8 @@ class AddAccountApi(APIView):
         serializer = AddAccountSerializer(query, many=True)
         return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
+        
+
     def post(self, request):
         serializer = AddAccountSerializer(data=request.data)
         if serializer.is_valid():
@@ -216,23 +218,25 @@ class InvoiceApiView(APIView):
 
     
     def post(self, request):
-        invoice_ref_no = random_number()
         data = {
-            # "invoice_no":request.data['invoice_no'],
             "invoice_date":request.data['invoice_date'],
             "invoice_amount": request.data['invoice_amount'],
             "deduction": request.data['deduction'],
             "deduction_reason": request.data['deduction_reason'],
-            "received_transfer":request.data['received_transfer'],            
-            "invoice_ref_no": invoice_ref_no
+            "received_transfer":request.data['received_transfer']
         }
+        var = request.data['received_transfer']
+        if var == 'in':
+            data["invoice_no"] = request.data['invoice_no']
+            data["invoice_ref_no"] = random_number(var)
+        if var == 'out':
+            data["invoice_no"] = random_number(var)
         serializer = InvoiceSerializer(data=data)      
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             in_amount,out_amount,flag = 0,0,False
             for inv in Invoice.objects.all() :
                 if inv.received_transfer == 'out':
-                    invoice_no = random_number()
                     out_amount += inv.invoice_amount - inv.deduction
                     flag = True
                 else:
@@ -241,7 +245,7 @@ class InvoiceApiView(APIView):
                 for bill in Bill.objects.all():
                     out_amount+= bill.bill_amount
    
-            return Response({"message": serializer.data, "in_amount":in_amount, "out_amount":out_amount,"invoice_no":invoice_no }, status=status.HTTP_201_CREATED)
+            return Response({"message": serializer.data, "in_amount":in_amount, "out_amount":out_amount}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -259,7 +263,14 @@ class PaymentApiView(APIView):
         return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = PaymentSerializer(data=request.data)
+        payment_ref_no = random_number_payment()
+        data = {
+            "payment_date":request.data['payment_date'],
+            "payment_ref_no":payment_ref_no,
+            "received_payment_transfer": request.data['received_payment_transfer'],
+            
+        }
+        serializer = PaymentSerializer(data = data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
@@ -427,9 +438,10 @@ class ExcelExportView(APIView):
         worksheet['P1'] = 'vendor_GSTno'
         worksheet['Q1'] = 'vendor_PanCard'
         worksheet['R1'] = 'vendor_TDS'
-        
-
-        
+        worksheet['S1'] = 'acc_no'
+        worksheet['T1'] = 'ifsc'
+        worksheet['U1'] = 'current_bal'
+        worksheet['V1'] = 'current_due'
 
         # all_fields = Finance_in._meta.fields
 
@@ -450,12 +462,16 @@ class ExcelExportView(APIView):
             worksheet.cell(row=i, column=10, value=row['payment_detail']['payment_ref_no'])
             worksheet.cell(row=i, column=11, value=row['payment_detail']['received_payment_transfer'])
             worksheet.cell(row=i, column=12, value=row['tds_tax'])
-            worksheet.cell(row=i, column=13, value=row['vendor_detail']['vendor_name'])
-            worksheet.cell(row=i, column=14, value=row['vendor_detail']['vendor_address'])
-            worksheet.cell(row=i, column=15, value=row['vendor_detail']['vendor_mobileno'])
-            worksheet.cell(row=i, column=16, value=row['vendor_detail']['vendor_GSTno'])
-            worksheet.cell(row=i, column=17, value=row['vendor_detail']['vendor_PanCard'])
-            worksheet.cell(row=i, column=18, value=row['vendor_detail']['vendor_TDS'])
+            worksheet.cell(row=i, column=13, value=row['vendor']['vendor_name'])
+            worksheet.cell(row=i, column=14, value=row['vendor']['vendor_address'])
+            worksheet.cell(row=i, column=15, value=row['vendor']['vendor_mobileno'])
+            worksheet.cell(row=i, column=16, value=row['vendor']['vendor_GSTno'])
+            worksheet.cell(row=i, column=17, value=row['vendor']['vendor_PanCard'])
+            worksheet.cell(row=i, column=18, value=row['vendor']['vendor_TDS'])
+            worksheet.cell(row=i, column=19, value=row['account']['acc_no'])
+            worksheet.cell(row=i, column=20, value=row['account']['ifsc'])
+            worksheet.cell(row=i, column=21, value=row['account']['current_bal'])
+            worksheet.cell(row=i, column=22, value=row['account']['current_due'])
 
 
         workbook.save(response)
@@ -531,3 +547,13 @@ class ExcelUploadView(APIView):
                 # Add more fields as needed
             )
         return Response({'message': 'Data uploaded successfully'})
+
+
+# class choosefileAPI(APIView):
+    
+#     df = pd.read_csv(r'C:\Users\sourabh gadhwal\Downloads\account_add_account.csv')
+#     print(df)    
+#     data = df[['acc_no', 'ifsc', 'current_bal', 'current_due']].values.tolist()
+#     df.Add_account.objects.create(data)
+  
+    

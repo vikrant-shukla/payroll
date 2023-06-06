@@ -40,6 +40,8 @@ urlpatterns = [
     path('exportin/', ExcelExportView.as_view(), name='export'),
     path('exportout/', ExcelExport.as_view(), name='export'),
     path('upload/', ExcelUploadView.as_view(), name='upload'),
+    # path('choosefile/', views.choosefileAPI.as_view(), name='choosefile'),
+
 
 
 ] 
