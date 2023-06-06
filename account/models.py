@@ -52,7 +52,7 @@ class Invoice(models.Model):
 
 class Payment(models.Model):
     payment_date = models.DateField()
-    payment_ref_no = models.IntegerField(default=0, unique=True)
+    payment_ref_no = models.BigIntegerField(unique=True,null=True)
     received_payment_transfer = models.CharField(max_length=20, choices=amount_state)
 
     def __str__(self):
@@ -62,8 +62,8 @@ class Vendor(models.Model):
     vendor_name=models.CharField(max_length=30)
     vendor_address=models.CharField(max_length=100)
     vendor_mobileno=models.IntegerField()
-    vendor_GSTno=models.CharField(max_length=15)
-    vendor_PanCard=models.CharField(max_length=10)
+    vendor_GSTno=models.CharField(max_length=15,unique=True)
+    vendor_PanCard=models.CharField(max_length=10,unique=True)
     vendor_TDS=models.IntegerField()
     
     def __str__(self):
@@ -78,6 +78,7 @@ class Finance_in(models.Model):
     tds_tax = models.IntegerField(default=0)
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
     vendor=models.ForeignKey(Vendor, on_delete=models.CASCADE, blank=True, null=True)
+    # filename=models.CharField(max_length=30)
 
     def __str__(self):
         return str(self.invoice_detail)
@@ -98,16 +99,24 @@ class Finance_out(models.Model):
     invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True)
     payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
     tds_tax = models.IntegerField(default=0)
-    bills = models.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
-    salary_process = models.CharField(max_length=20)
-    account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
-    final = models.IntegerField(null=True, blank=True)
+    # bills = models.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
+    # salary_process = models.CharField(max_length=20)
+    # account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
+    # final = models.IntegerField(null=True, blank=True)
     vendor=models.ForeignKey(Vendor, on_delete=models.CASCADE, blank=True, null=True)
-
     
     def __str__(self):
         return str(self.amount)
+    
+    
+class Month_Finance_out(models.Model):
+    amount = models.IntegerField(default=0)    
+    # bills = models.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
+    salary_process = models.CharField(max_length=20)
+    final = models.IntegerField(null=True, blank=True)
 
+    def __str__(self):
+        return str(self.amount)
 
 eval_choices = (
     ("pass", "Pass"),
@@ -203,3 +212,6 @@ class Otp(models.Model):
 
     def __str__(self) -> str:
         return str(self.otp)
+    
+# class choosefile(models.Model):
+#     file=models.FileField(upload_to="files", blank=True, null=True)

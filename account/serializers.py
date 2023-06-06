@@ -148,9 +148,16 @@ class InvoiceSerializer(serializers.ModelSerializer):
         # fields = '__all__',
         fields = ('id','invoice_no','invoice_ref_no', 'invoice_date','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
 
+    def validate(self,data):
+        deduction_reason=data.get('deduction_reason')
+        
+        if not re.match(r'^[A-Za-z]{1,100}$', deduction_reason):
+            raise serializers.ValidationError("enter valid deduction reason")
+        return data
 
 class PaymentSerializer(serializers.ModelSerializer):
-    related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
+    # related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
+    
     class Meta:
         model = Payment
         fields = '__all__'
@@ -168,6 +175,27 @@ class VendorSerializers(serializers.ModelSerializer):
         # vendor_GSTno=serializers.CharField(max_length=15)
         # vendor_PanCard=serializers.CharField(max_length=10)
         # vendor_TDS=serializers.IntegerField()
+        
+    def validate(self,data):
+        vendor_name=data.get('vendor_name')
+        vendor_address=data.get('vendor_address')
+        mob=str(data.get('vendor_mobileno'))
+        # vendor_GSTno=data.get('vendor_GSTno')
+        pan_no=data.get('vendor_PanCard')
+        # vendor_TDS=data.get('vendor_TDS')
+        if not re.match(r'^[a-zA-Z\s]{1,30}$', vendor_name):
+            raise serializers.ValidationError("enter valid name")
+        if not re.match(r'^[A-Za-z0-9/,- ]{1,100}$', vendor_address):
+            raise serializers.ValidationError("enter valid address")
+        if not mob.isdigit() or len(mob)!=10 or int(mob[0])<6:
+            raise serializers.ValidationError('Enter a mob.no.')
+        # if not re.match(r'^[0-9]$', vendor_GSTno):
+        #     raise serializers.ValidationError("enter valid note")
+        if not re.match(r'^[A-Z]{5}[0-9]{4}[A-Z]$', pan_no):
+            raise serializers.ValidationError('Enter a Pan NUmber')
+        # if not re.match(r'^[0-9]$', vendor_TDS):
+        #     raise serializers.ValidationError("enter valid note")
+        return data
 
 
 class BillSerializer(serializers.ModelSerializer):
@@ -236,7 +264,7 @@ class FinanceOutSerializer(serializers.ModelSerializer):
     
     def validate(self,data):
         sal_proces=data.get('salary_process')
-        if not re.match(r'^[a-zA-Z]*$',  sal_proces):
+        if not re.match(r'^[a-zA-Z]{1,20}$',  sal_proces):
             raise serializers.ValidationError("Only alphabets  are allowed.")
         return data
 
@@ -294,12 +322,27 @@ class InsuranceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Insurance
         fields = '__all__'
+        
+    def validate(self,data):
+        nominee=data.get('nominee')
+        if not re.match(r'^[A-Za-z]{1,200}$', nominee):
+            raise serializers.ValidationError("Only alphabets  are allowed.")
+        return data
 
 
 class EvaluationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evaluation
         fields = '__all__'
+        
+    def validate(self,data):
+        evaluation=data.get('evaluation')
+        notes=data.get('notes')
+        if not re.match(r"^\d[a-zA-Z]+ [a-zA-Z]+$", evaluation):
+            raise serializers.ValidationError("Only alphabets  are allowed. at eval")
+        if not re.match(r'^[A-Za-z]{1,2000}$', notes):
+            raise serializers.ValidationError("Only alphabets  are allowed.")
+        return data
 
 
 class PayrollSerializer(serializers.ModelSerializer):
@@ -326,10 +369,8 @@ class PayrollSerializer(serializers.ModelSerializer):
         probation_days = obj.probation_days
         start_date = obj.doj
         end_date = start_date + timedelta(days=probation_days)
-        return end_date
+        return end_date    
     
-    
-
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['marksheet_attach'] = MarksheetSerializer(instance.marksheet_attach).data
@@ -338,9 +379,36 @@ class PayrollSerializer(serializers.ModelSerializer):
         # response['account'] = AddAccountSerializer(instance.account).data
         return response
     
+    def validate(self,data):
+        firstname=data.get('firstname')
+        lastname=data.get('lastname')
+        fathername=data.get('fathername')
+        mothername=data.get('mothername')
+        adhar_no=str(data.get('adhar_no'))
+        pan_no=data.get('pan_no')
+        if not re.match(r'^[A-Za-z]{1,30}$', firstname):
+            raise serializers.ValidationError("enter valid firstname")
+        if not re.match(r'^[A-Za-z]{1,30}$', lastname):
+            raise serializers.ValidationError('Enter a valid lastname')
+        if not re.match(r'^[A-Za-z]{1,30}$', fathername):
+            raise serializers.ValidationError('Enter a valid father name')
+        if not re.match(r'^[A-Za-z]{1,30}$', mothername):
+            raise serializers.ValidationError('Enter a valid mother name')
+        if not re.match(r'^[0-9]{12,16}$', adhar_no):
+            raise serializers.ValidationError('Enter a Aadhar number')
+        if not re.match(r'^[A-Z]{5}[0-9]{4}[A-Z]$', pan_no):
+            raise serializers.ValidationError('Enter a Pan NUmber')
+        return data
+    
+    
 class ExcelUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
     def validate_file(self, value):
         # Add any validation logic for the file, if required
         # For example: check file extension, file size, etc.
         return value
+    
+class choosefileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = choosefile
+        fields = '__all__'
