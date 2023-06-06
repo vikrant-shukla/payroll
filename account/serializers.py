@@ -185,7 +185,7 @@ class VendorSerializers(serializers.ModelSerializer):
         # vendor_TDS=data.get('vendor_TDS')
         if not re.match(r'^[a-zA-Z\s]{1,30}$', vendor_name):
             raise serializers.ValidationError("enter valid name")
-        if not re.match(r'^[A-Za-z0-9/,- ]{1,100}$', vendor_address):
+        if not re.match(r'^[A-Za-z0-9/, ]{1,100}$', vendor_address):
             raise serializers.ValidationError("enter valid address")
         if not mob.isdigit() or len(mob)!=10 or int(mob[0])<6:
             raise serializers.ValidationError('Enter a mob.no.')
@@ -248,26 +248,30 @@ class FinanceOutSerializer(serializers.ModelSerializer):
         # payment_detail = serializers.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
         # tds_tax = serializers.IntegerField(default=0)
         # bills = serializers.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
-        salary_process = serializers.CharField(max_length=20)
+        # salary_process = serializers.CharField(max_length=20)
         # account = serializers.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
         # final = serializers.IntegerField(null=True, blank=True)
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
-        response['bills'] = BillSerializer(instance.bills).data
+        # response['bills'] = BillSerializer(instance.bills).data
         response['invoice_detail'] = InvoiceSerializer(instance.invoice_detail).data
         response['payment_detail'] = PaymentSerializer(instance.payment_detail).data
-        response['account'] = AddAccountSerializer(instance.account).data
+        # response['account'] = AddAccountSerializer(instance.account).data
         response['vendor'] = VendorSerializers(instance.vendor).data
 
         return response
     
-    def validate(self,data):
-        sal_proces=data.get('salary_process')
-        if not re.match(r'^[a-zA-Z]{1,20}$',  sal_proces):
-            raise serializers.ValidationError("Only alphabets  are allowed.")
-        return data
+    # def validate(self,data):
+    #     sal_proces=data.get('salary_process')
+    #     if not re.match(r'^[a-zA-Z]{1,20}$',  sal_proces):
+    #         raise serializers.ValidationError("Only alphabets  are allowed.")
+    #     return data
 
+class Month_Finance_outSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Month_Finance_out
+        fields = '__all__'
 
 class FinanceInSerializer(serializers.ModelSerializer):
     # invoice = serializers.SerializerMethodField()
@@ -408,7 +412,7 @@ class ExcelUploadSerializer(serializers.Serializer):
         # For example: check file extension, file size, etc.
         return value
     
-class choosefileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = choosefile
-        fields = '__all__'
+# class choosefileSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = choosefile
+#         fields = '__all__'

@@ -24,6 +24,6 @@ admin.site.register(Payroll)
 admin.site.register(MyModel)
 admin.site.register(Vendor)
 admin.site.register(Otp)
-
+admin.site.register(Month_Finance_out)
 
 

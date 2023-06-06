@@ -61,7 +61,7 @@ class Payment(models.Model):
 class Vendor(models.Model):
     vendor_name=models.CharField(max_length=30)
     vendor_address=models.CharField(max_length=100)
-    vendor_mobileno=models.IntegerField()
+    vendor_mobileno=models.BigIntegerField()
     vendor_GSTno=models.CharField(max_length=15,unique=True)
     vendor_PanCard=models.CharField(max_length=10,unique=True)
     vendor_TDS=models.IntegerField()
@@ -95,15 +95,12 @@ class Bill(models.Model):
 
 class Finance_out(models.Model):
     amount = models.IntegerField(default=0)
-    ref_no = models.IntegerField(default=0, unique=True)
+    ref_no = models.BigIntegerField(default=0)
     invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True)
     payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
-    tds_tax = models.IntegerField(default=0)
-    # bills = models.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
-    # salary_process = models.CharField(max_length=20)
-    # account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
-    # final = models.IntegerField(null=True, blank=True)
+    tds_tax = models.IntegerField(default=0)    
     vendor=models.ForeignKey(Vendor, on_delete=models.CASCADE, blank=True, null=True)
+    final = models.IntegerField(default=0)
     
     def __str__(self):
         return str(self.amount)
@@ -111,9 +108,9 @@ class Finance_out(models.Model):
     
 class Month_Finance_out(models.Model):
     amount = models.IntegerField(default=0)    
-    # bills = models.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
+    bill = models.IntegerField(default=0) 
     salary_process = models.CharField(max_length=20)
-    final = models.IntegerField(null=True, blank=True)
+    
 
     def __str__(self):
         return str(self.amount)
@@ -188,9 +185,9 @@ class Payroll(models.Model):
     lastname = models.CharField(max_length=20)
     fathername = models.CharField(max_length=20)
     mothername = models.CharField(max_length=20)
-    adhar_no = models.BigIntegerField(default=0)
+    adhar_no = models.BigIntegerField(default=0,unique=True)
     adhar_attach = models.FileField(upload_to="files", blank=True, null=True)
-    pan_no = models.CharField(max_length=15)
+    pan_no = models.CharField(max_length=15,unique=True)
     pan_attach = models.FileField(upload_to="files", blank=True, null=True)
     marksheet_attach = models.ForeignKey(Marksheet, on_delete=models.CASCADE)
     graduation = models.CharField(max_length=20, choices=User_choices, default="ug")
