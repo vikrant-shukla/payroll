@@ -1,6 +1,6 @@
 import random
 
-from account.models import Invoice, Payment
+from account.models import Invoice, Payment , Finance_out
 
 
 def random_number(var):
@@ -19,3 +19,8 @@ def random_number_payment():
         random_number_payment()
     return payment_ref_no
 
+def random_number_financeout():
+    ref_no = random.randint(0000000000, 9999999999)
+    if Finance_out.objects.values('ref_no').filter(ref_no = ref_no):
+        random_number_financeout()
+    return ref_no

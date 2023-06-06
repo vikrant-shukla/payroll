@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="RefreshToken"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="RefreshToken"),
     path('financeout/', views.FinanceOutAPI.as_view(), name='financeout'),
+    path('Month_Finance_out/', views.Month_Finance_outApi.as_view(), name='Month_Finance_out'),
     path('financein/', views.FinanceInApi.as_view(), name='financein'),
     path('bill/', views.BillApiView.as_view(), name='addition'),
     path('payment/', views.PaymentApiView.as_view(), name='payment'),

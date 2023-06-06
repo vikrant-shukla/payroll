@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
-from account.functionalities import random_number, random_number_payment
+from account.functionalities import random_number, random_number_payment , random_number_financeout
 from account.serializers import *
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -307,14 +307,39 @@ class FinanceOutAPI(APIView):
 
 
     def post(self, request):
-        serializer = FinanceOutSerializer(data=request.data)
+        ref_no = random_number_financeout()
+        data = {
+            "amount":request.data['amount'],
+            "invoice_detail":request.data['invoice_detail'],
+            "payment_detail":request.data['payment_detail'],
+            "tds_tax":request.data['tds_tax'],
+            "vendor":request.data['vendor'],
+            "ref_no":ref_no,
+            "final": request.data['final'],
+            
+        }
+        serializer = FinanceOutSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response({"data":serializer.data} ,status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class Month_Finance_outApi(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def get(self, request):
+        pym = Month_Finance_out.objects.all()
+        serializer = Month_Finance_outSerializer(pym, many=True)
+        return Response(serializer.data)
 
+    def post(self, request):
+        serializer = Month_Finance_outSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     # def post(self, request):
     #     serializer = self.serializer_class(data=request.data)
     #     serializer.is_valid(raise_exception=True)
