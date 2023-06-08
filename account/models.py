@@ -105,13 +105,12 @@ class Finance_out(models.Model):
     def __str__(self):
         return str(self.amount)
     
-    
+        
 class Month_Finance_out(models.Model):
     amount = models.IntegerField(default=0)    
     bill = models.IntegerField(default=0) 
     salary_process = models.CharField(max_length=20)
     
-
     def __str__(self):
         return str(self.amount)
 
@@ -119,26 +118,7 @@ eval_choices = (
     ("pass", "Pass"),
     ("fail", "Fail"),
 )
-
-
-class Evaluation(models.Model):
-    
-    evaluation = models.CharField(max_length=200)
-    status = models.CharField(max_length=20, choices=eval_choices, default="pass")
-    notes = models.CharField(max_length=2000)
-    
-    def __str__(self) -> str:
-        return str(self.evaluation)
-
-
-class Insurance(models.Model):
-    policy_no = models.IntegerField(default=0)
-    nominee = models.CharField(max_length=20)
-    insured_value = models.IntegerField(default=0)
-    
-    def __str__(self) -> str:
-        return str(self.policy_no)
-        
+       
 
 # class Salary_breakup(models.Model):
 #     basic_sal = models.IntegerField(default=0)(20)
@@ -179,8 +159,8 @@ User_choices = (
 )
 
 
-
-class Payroll(models.Model):    
+class Payroll(models.Model):  
+    employee_id= models.CharField(max_length=20)  
     firstname = models.CharField(max_length=20)
     lastname = models.CharField(max_length=20)
     fathername = models.CharField(max_length=20)
@@ -194,9 +174,28 @@ class Payroll(models.Model):
     dob = models.DateField()
     doj = models.DateField()
     probation_days = models.IntegerField(default=90)    
-    evalution = models.ForeignKey(Evaluation, on_delete=models.CASCADE)
-    insurance = models.ForeignKey(Insurance, on_delete=models.CASCADE)
+    # evalution = models.ForeignKey(Evaluation, on_delete=models.CASCADE)
+    emp_insurance = models.CharField(max_length=20)
     # salary_break = models.ForeignKey(Salary_breakup, on_delete=models.CASCADE)s
+    
+class Evaluation(models.Model):
+    emp_detail= models.ForeignKey(Payroll, on_delete=models.CASCADE)
+    evaluation = models.CharField(max_length=200)
+    status = models.CharField(max_length=20, choices=eval_choices, default="pass")
+    notes = models.CharField(max_length=2000)
+    
+    def __str__(self) -> str:
+        return str(self.evaluation)
+    
+class Insurance(models.Model):
+    
+    emp_insur= models.ForeignKey(Payroll, on_delete=models.CASCADE)
+    policy_no = models.BigIntegerField(default=0)
+    nominee = models.CharField(max_length=20)
+    insured_value = models.IntegerField(default=0)
+    
+    def __str__(self) -> str:
+        return str(self.policy_no)
     
 class MyModel(models.Model):
     column1 = models.FileField(upload_to="files", blank=True, null=True)

@@ -327,6 +327,13 @@ class InsuranceSerializer(serializers.ModelSerializer):
         model = Insurance
         fields = '__all__'
         
+    def to_representation(self, instance):
+        
+        response = super().to_representation(instance)
+        response['emp_insur'] = PayrollSerializer(instance.emp_insur).data
+        
+        return response
+        
     def validate(self,data):
         nominee=data.get('nominee')
         if not re.match(r'^[A-Za-z]{1,200}$', nominee):
@@ -347,7 +354,13 @@ class EvaluationSerializer(serializers.ModelSerializer):
         if not re.match(r'^[A-Za-z]{1,2000}$', notes):
             raise serializers.ValidationError("Only alphabets  are allowed.")
         return data
-
+    
+    def to_representation(self, instance):
+    
+        response = super().to_representation(instance)
+        response['emp_detail'] = PayrollSerializer(instance.emp_detail).data
+        
+        return response
 
 class PayrollSerializer(serializers.ModelSerializer):
     probation_period = serializers.SerializerMethodField()
@@ -355,10 +368,10 @@ class PayrollSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payroll
-        fields = ['firstname','lastname', 'fathername','mothername',
+        fields = ['id','employee_id','firstname','lastname', 'fathername','mothername',
                 'adhar_no','adhar_attach','pan_no', 'pan_attach', 
                 'marksheet_attach', 'graduation', 'dob', 'doj',
-                'evalution','insurance','probation_period']
+                'emp_insurance','probation_period']
 
     # def get_probation_period(self, obj):
     #     probation_days = 90 # adjust as needed
@@ -378,8 +391,8 @@ class PayrollSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['marksheet_attach'] = MarksheetSerializer(instance.marksheet_attach).data
-        response['evalution'] = EvaluationSerializer(instance.evalution).data
-        response['insurance'] = InsuranceSerializer(instance.insurance).data
+        # response['evalution'] = EvaluationSerializer(instance.evalution).data
+        # response['insurance'] = InsuranceSerializer(instance.insurance).data
         # response['account'] = AddAccountSerializer(instance.account).data
         return response
     
@@ -401,7 +414,7 @@ class PayrollSerializer(serializers.ModelSerializer):
         if not re.match(r'^[0-9]{12,16}$', adhar_no):
             raise serializers.ValidationError('Enter a Aadhar number')
         if not re.match(r'^[A-Z]{5}[0-9]{4}[A-Z]$', pan_no):
-            raise serializers.ValidationError('Enter a Pan NUmber')
+            raise serializers.ValidationError('Enter a Correct Pan NUmber')
         return data
     
     

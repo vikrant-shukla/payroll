@@ -18,9 +18,19 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import generics
 from django.contrib.auth.models import AbstractUser
+from django_filters.rest_framework import DjangoFilterBackend
+from fpdf import FPDF
+from django.db.models import Sum,Count
 
 
+class PayrollElementView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated,)
 
+    queryset = Payroll.objects.all()
+    serializer_class = PayrollSerializer
+    filter_backends=[DjangoFilterBackend,]
+    filterset_fields=['firstname','lastname', 'fathername','mothername',
+                'adhar_no','pan_no']
 
 
 class RegisterAPI(APIView):
@@ -194,13 +204,21 @@ class BillApiView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
-    def get(self, request):
-        bills = Bill.objects.all()
-        total_amount = sum([bill.bill_amount for bill in bills])
-        return Response({"message": total_amount}, status=status.HTTP_201_CREATED)
+    # def get(self, request):
+    #     bills = Bill.objects.all()
+    #     total_amount = sum([bill.bill_amount for bill in bills])
+    #     return Response({"message": total_amount}, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         # return Response({'total_amount': total_amount})
-
+    def get(self, request):
+        query_parameter = request.query_params
+        data = query_parameter['id'] if len(query_parameter) != 0 else False
+        if data:
+            query = Bill.objects.filter(id=query_parameter['id'])
+        else:
+            query = Bill.objects.all()
+        serializer = BillSerializer(query, many=True)
+        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
 class InvoiceApiView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -365,6 +383,17 @@ class FinanceInApi(APIView):
             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class Financeintotal(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        queryset = Finance_in.objects.aggregate( count = Count('id'),total_amount=Sum('amount'))
+        return Response(queryset)
+class Financeouttotal(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        queryset = Finance_out.objects.aggregate(count = Count('id'),total_amount=Sum('amount'))
+        return Response(queryset)
+
 
 class Graduation_detailsViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
@@ -392,9 +421,14 @@ class InsuranceAPI(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        books = Insurance.objects.all()
-        serializer = InsuranceSerializer(books, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        query_parameter = request.query_params
+        data = query_parameter['id'] if len(query_parameter) != 0 else False
+        if data:
+            query = Insurance.objects.filter(id=query_parameter['id'])
+        else:
+            query = Insurance.objects.all()
+        serializer = InsuranceSerializer(query, many=True)
+        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = InsuranceSerializer(data=request.data)
@@ -408,9 +442,14 @@ class EvaluationAPI(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        books = Evaluation.objects.all()
-        serializer = EvaluationSerializer(books, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        query_parameter = request.query_params
+        data = query_parameter['id'] if len(query_parameter) != 0 else False
+        if data:
+            query = Evaluation.objects.filter(id=query_parameter['id'])
+        else:
+            query = Evaluation.objects.all()
+        serializer = EvaluationSerializer(query, many=True)
+        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = EvaluationSerializer(data=request.data)
@@ -581,4 +620,43 @@ class ExcelUploadView(APIView):
 #     data = df[['acc_no', 'ifsc', 'current_bal', 'current_due']].values.tolist()
 #     df.Add_account.objects.create(data)
   
-    
+class PDF(FPDF):
+    def __init__(self):
+        super().__init__()
+        self.WIDTH = 210
+        self.HEIGHT = 297
+        
+    def header(self):
+        # Custom logo and positioning
+        # Create an `assets` folder and put any wide and short image inside
+        # Name the image `logo.png`
+        self.image('assets/logo.png', 10, 8, 33)
+        self.set_font('Arial', 'B', 11)
+        self.cell(self.WIDTH - 80)
+        self.cell(60, 1, 'Sales report', 0, 0, 'R')
+        self.ln(20)
+        
+    def footer(self):
+        # Page numbers in the footer
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        self.set_text_color(128)
+        self.cell(0, 10, 'Page ' + str(self.page_no()), 0, 0, 'C')
+
+    def page_body(self, images):
+        # Determine how many plots there are per page and set positions
+        # and margins accordingly
+        if len(images) == 3:
+            self.image(images[0], 15, 25, self.WIDTH - 30)
+            self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
+            self.image(images[2], 15, self.WIDTH / 2 + 90, self.WIDTH - 30)
+        elif len(images) == 2:
+            self.image(images[0], 15, 25, self.WIDTH - 30)
+            self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
+        else:
+            self.image(images[0], 15, 25, self.WIDTH - 30)
+            
+    def print_page(self, images):
+        # Generates the report
+        self.add_page()
+        self.page_body(images)
