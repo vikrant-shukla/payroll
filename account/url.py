@@ -22,6 +22,7 @@ urlpatterns = [
     path('ResetPasswordview/', views.ResetPasswordview.as_view()),
     path('otp/', views.OtpVerification.as_view()),
     path('addaccount/', views.AddAccountApi.as_view(), name='addaccount'),
+    path('payrollelement/', views.PayrollElementView.as_view(), name='payrollelement'),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="RefreshToken"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="RefreshToken"),
     path('financeout/', views.FinanceOutAPI.as_view(), name='financeout'),
@@ -42,6 +43,8 @@ urlpatterns = [
     path('exportout/', ExcelExport.as_view(), name='export'),
     path('upload/', ExcelUploadView.as_view(), name='upload'),
     # path('choosefile/', views.choosefileAPI.as_view(), name='choosefile'),
+    path('Financeintotal/', views.Financeintotal.as_view(), name='Financeintotal'),
+    path('Financeouttotal/', views.Financeouttotal.as_view(), name='Financeouttotal'),
 
 
 
