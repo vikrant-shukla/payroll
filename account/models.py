@@ -71,7 +71,7 @@ class Vendor(models.Model):
 
 
 class Finance_in(models.Model):
-    amount = models.BigIntegerField(default=0, unique=True)
+    amount = models.BigIntegerField(default=0)
     ref_no = models.IntegerField(default=0, unique=True)
     invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True )
     payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
@@ -79,6 +79,12 @@ class Finance_in(models.Model):
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
     vendor=models.ForeignKey(Vendor, on_delete=models.CASCADE, blank=True, null=True)
     # filename=models.CharField(max_length=30)
+
+    class Meta:
+        indexes = [
+                models.Index(fields=['-id']),
+            ]
+
 
     def __str__(self):
         return str(self.invoice_detail)
