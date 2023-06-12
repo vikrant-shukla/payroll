@@ -20,6 +20,8 @@ from rest_framework import generics
 from django.contrib.auth.models import AbstractUser
 from django_filters.rest_framework import DjangoFilterBackend
 from fpdf import FPDF
+from django.core.paginator import Paginator
+
 from django.db.models import Sum,Count
 
 
@@ -74,8 +76,8 @@ class SentMailView(APIView):
         try:
             send_mail(subject, body, settings.EMAIL_HOST_USER, [mail.email], fail_silently=False)
             return Response({"status": "mail sent "}, status=status.HTTP_201_CREATED)
-        except:
-            return Response({"status": "An error ocured. Try again!!!"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"status": f"An error ocured.{e} Try again!!!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class OtpVerification(APIView):
@@ -108,68 +110,7 @@ class ResetPasswordview(generics.UpdateAPIView):
                 return Response({'status': 'An error occured'}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'status': 'An error occured'}, status=status.HTTP_400_BAD_REQUEST)
     
-# class resetpassword(APIView):
-#     def post(self,request):
-#         serializer=resetpasswordSerializer(data=request.data)
-#         alldatas={}
-#         if serializer.is_valid(raise_exception=True):
-#             mname=serializer.save()
-#             alldatas['data']='successfully registered'
-#             print(alldatas)
-#             return Response(alldatas)
-#         return Response('failed retry after some time')
-    
-    
-# class ChangePasswordView(generics.UpdateAPIView):
-    
-#     serializer_class = ChangePasswordSerializer
-#     model = UserTable
-#     permission_classes = (IsAuthenticated,)
 
-#     def post (self, queryset=None):
-#         obj = self.request.User
-#         return obj
-
-#     def update(self, request, *args, **kwargs):
-#         self.object = self.get_object()
-#         serializer = self.get_serializer(data=request.data)
-
-#         if serializer.is_valid():
-#             # Check old password
-#             if not self.object.check_password(serializer.data.get("old_password")):
-#                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-#             self.object.set_password(serializer.data.get("new_password"))
-#             self.object.save()
-#             response = {
-#                 'status': 'success',
-#                 'code': status.HTTP_200_OK,
-#                 'message': 'Password updated successfully',
-#                 'data': []
-#             }
-
-#             return Response(response)
-
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
-
-    # def post (AbstractUser):
-    #     token = default_token_generator.make_token(AbstractUser)
-    #     return token
-    
-    # def generate_password_reset_link(AbstractUser, token):
-    #     reset_link = f"https://example.com/reset-password/?token={token}"
-    #     return reset_link
-
-    # def send_password_reset_email(AbstractUser, reset_link):
-    #     message = f"Click the link to reset your password: {reset_link}"
-    #     send_mail("Password Reset", message, "from@example.com", [AbstractUser.email])
-    
-    # def reset_password(token, new_password):
-    #     user = UserTable.objects.get(auth_token=token)
-    #     if default_token_generator.check_token(AbstractUser, token):
-    #         user.set_password(new_password)
-    #         user.save()
-    #         return Response({'sent'}, status=status.HTTP_200_OK)
-        
 
 class AddAccountApi(APIView):
     permission_classes = (IsAuthenticated,)
@@ -202,14 +143,7 @@ class BillApiView(APIView):
             serializer.save()
             return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
-    # def get(self, request):
-    #     bills = Bill.objects.all()
-    #     total_amount = sum([bill.bill_amount for bill in bills])
-    #     return Response({"message": total_amount}, status=status.HTTP_201_CREATED)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # return Response({'total_amount': total_amount})
+
     def get(self, request):
         query_parameter = request.query_params
         data = query_parameter['id'] if len(query_parameter) != 0 else False
@@ -332,8 +266,7 @@ class FinanceOutAPI(APIView):
             "payment_detail":request.data['payment_detail'],
             "tds_tax":request.data['tds_tax'],
             "vendor":request.data['vendor'],
-            "ref_no":ref_no,
-            "final": request.data['final'],
+            "ref_no":ref_no
             
         }
         serializer = FinanceOutSerializer(data=data)
@@ -358,21 +291,14 @@ class Month_Finance_outApi(APIView):
             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    # def post(self, request):
-    #     serializer = self.serializer_class(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     water_bill = serializer.validated_data['water_bill']
-    #     electricity_bill = serializer.validated_data['electricity_bill']
-    #     other_bill = serializer.validated_data['other_bill']
-    #     result = rent_bill + food_bill + paper_bill + water_bill + electricity_bill + other_bill 
-    #     addition = Bill.objects.create(rent_bill=rent_bill, food_bill = food_bill, paper_bill = paper_bill, water_bill = water_bill , electricity_bill= electricity_bill,other_bill = other_bill,result=result)
-    #     return Response(serializer.data)
-
 class FinanceInApi(APIView):
     permission_classes = (IsAuthenticated,)
     
     def get(self, request):
-        pym = Finance_in.objects.all()
+        # paginator = Paginator(Finance_in.objects.all().order_by('asc'), 10)
+        pym =Finance_in.objects.order_by('id')[:10]
+        # pym = paginator.get_page(1)  # Get the first page
+
         serializer = FinanceInSerializer(pym, many=True)
         return Response(serializer.data)
 
@@ -386,8 +312,11 @@ class FinanceInApi(APIView):
 class Financeintotal(APIView):
     permission_classes = (IsAuthenticated,)
     def get(self, request):
-        queryset = Finance_in.objects.aggregate( count = Count('id'),total_amount=Sum('amount'))
-        return Response(queryset)
+        queryset= Finance_in.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
+        queryset2= Finance_out.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
+
+        return Response({"in":queryset,"out":queryset2})
+    
 class Financeouttotal(APIView):
     permission_classes = (IsAuthenticated,)
     def get(self, request):
@@ -573,7 +502,6 @@ class ExcelExport(APIView):
         # Get data
         queryset = Finance_out.objects.all()
         serializer = FinanceOutSerializer(queryset, many=True)
-        # Write data to Excel file
         for i, row in enumerate(serializer.data, start=2):
             worksheet.cell(row=i, column=1, value=row['amount'])
             worksheet.cell(row=i, column=2, value=row['ref_no'])
@@ -613,13 +541,7 @@ class ExcelUploadView(APIView):
         return Response({'message': 'Data uploaded successfully'})
 
 
-# class choosefileAPI(APIView):
-    
-#     df = pd.read_csv(r'C:\Users\sourabh gadhwal\Downloads\account_add_account.csv')
-#     print(df)    
-#     data = df[['acc_no', 'ifsc', 'current_bal', 'current_due']].values.tolist()
-#     df.Add_account.objects.create(data)
-  
+
 class PDF(FPDF):
     def __init__(self):
         super().__init__()
@@ -627,9 +549,6 @@ class PDF(FPDF):
         self.HEIGHT = 297
         
     def header(self):
-        # Custom logo and positioning
-        # Create an `assets` folder and put any wide and short image inside
-        # Name the image `logo.png`
         self.image('assets/logo.png', 10, 8, 33)
         self.set_font('Arial', 'B', 11)
         self.cell(self.WIDTH - 80)
@@ -637,15 +556,13 @@ class PDF(FPDF):
         self.ln(20)
         
     def footer(self):
-        # Page numbers in the footer
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
         self.set_text_color(128)
         self.cell(0, 10, 'Page ' + str(self.page_no()), 0, 0, 'C')
 
     def page_body(self, images):
-        # Determine how many plots there are per page and set positions
-        # and margins accordingly
+
         if len(images) == 3:
             self.image(images[0], 15, 25, self.WIDTH - 30)
             self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
@@ -657,6 +574,5 @@ class PDF(FPDF):
             self.image(images[0], 15, 25, self.WIDTH - 30)
             
     def print_page(self, images):
-        # Generates the report
         self.add_page()
         self.page_body(images)

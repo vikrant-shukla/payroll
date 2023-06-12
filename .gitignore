@@ -5,3 +5,5 @@ account/__pycache__/
 __pycache__/
 FP/__pycache__/
 db.sqlite3
+.DS_STORE
+account/.DS_STORE

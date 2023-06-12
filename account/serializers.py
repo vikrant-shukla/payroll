@@ -36,7 +36,7 @@ class UserTableSerializer(serializers.ModelSerializer):
         if not re.match(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$', email):
             raise serializers.ValidationError('Enter a email.')
         if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()-_=+{}[\]|\\:;<>,.?/~]).{6,}$', password):
-            raise serializers.ValidationError('Enter a password.')
+            raise serializers.ValidationError('Enter a valid password.')
         if not mob.isdigit() or len(mob)>10 or int(mob[0])<6:
             raise serializers.ValidationError('Enter a valid mob.no.')
         return data
@@ -84,34 +84,6 @@ class SetNewPasswordSerializer(serializers.Serializer):
         else:
             return serializers.ValidationError('Email does not matched')
 
-# class resetpasswordSerializer(serializers.ModelSerializer):
-#     email=serializers.EmailField()
-#     password=serializers.CharField(max_length=100)
-#     class Meta:
-#         model=UserTable
-#         # fields='__all__'
-#         fields = ('email','password')
-        
-#     def save(self):
-#         username=self.validated_data['username']
-#         password=self.validated_data['password']
-#         #filtering out whethere username is existing or not, if your username is existing then if condition will allow your username
-#         if AbstractUser.objects.filter(username=username).exists():
-#         #if your username is existing get the query of your specific username 
-#             user=AbstractUser.objects.get(username=username)
-#             #then set the new password for your username
-#             user.set_password(password)
-#             user.save()
-#             return user
-#         else:
-#             raise serializers.ValidationError({'error':'please enter valid crendentials'})
-
-# class ChangePasswordSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = UserTable
-#         fields = ('email','password')
-#         old_password = serializers.CharField(required=True)
-#         new_password = serializers.CharField(required=True)
 
 
 class AddAccountSerializer(serializers.ModelSerializer):
@@ -132,9 +104,9 @@ class AddAccountSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("enter valid account no")  
         if not re.match(r'^[A-Z]{4}0[0-9]{6}$', ifsc_c):
             raise serializers.ValidationError('Enter a valid IFSC code.')
-        if not re.match(r'^[0-9]*\.?[0-9]{2}+$', c_bal):
+        if not re.match(r'^[0-9]*\.?[0-9]{2}$', c_bal):
             raise serializers.ValidationError('Enter a valid balance.')
-        if not re.match(r'^[0-9]*\.?[0-9]{2}+$', c_due):
+        if not re.match(r'^[0-9]*\.?[0-9]{2}$', c_due):
             raise serializers.ValidationError('Enter a valid balance.')
         return data
             
@@ -156,8 +128,6 @@ class InvoiceSerializer(serializers.ModelSerializer):
         return data
 
 class PaymentSerializer(serializers.ModelSerializer):
-    # related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
-    
     class Meta:
         model = Payment
         fields = '__all__'
@@ -169,12 +139,6 @@ class VendorSerializers(serializers.ModelSerializer):
         model = Vendor
         # fields = '__all__'
         fields = ('id','vendor_name','vendor_address','vendor_mobileno','vendor_GSTno','vendor_PanCard','vendor_TDS')
-        # vendor_name=serializers.CharField(max_length=30)
-        # vendor_address=serializers.CharField(max_length=100)
-        # vendor_mobileno=serializers.IntegerField()
-        # vendor_GSTno=serializers.CharField(max_length=15)
-        # vendor_PanCard=serializers.CharField(max_length=10)
-        # vendor_TDS=serializers.IntegerField()
         
     def validate(self,data):
         vendor_name=data.get('vendor_name')
@@ -199,11 +163,9 @@ class VendorSerializers(serializers.ModelSerializer):
 
 
 class BillSerializer(serializers.ModelSerializer):
-    # related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
     class Meta:
         model = Bill
         fields = '__all__'
-        # fields = ('related_model_id', 'bill_no', 'bill_date', 'bill_amount', 'bill_type')
         bill_no = serializers.IntegerField(default=0)
         bill_date=serializers.DateField()
         bill_amount = serializers.IntegerField(default=0)
@@ -215,42 +177,10 @@ class BillSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Only alphabets  are allowed.")
         return data
 
-
-#     def create(self, validated_data):
-#         amount = 0
-#         for k,bill_value in validated_data.items():
-#             amount +=bill_value
-#         instance =  super().create(validated_data)
-#         instance.result = amount
-#         instance.save()
-#         return instance
-
 class FinanceOutSerializer(serializers.ModelSerializer):
-    # invoice = serializers.SerializerMethodField()
-    # payment = serializers.SerializerMethodField()
-    # bill = serializers.SerializerMethodField()
-
-    # def get_invoice(self, instance):
-    #     return InvoiceSerializer(instance=instance.invoice_detail).data
-
-    # def get_payment(self, instance):
-    #     return PaymentSerializer(instance=instance.payment_detail).data
-
-    # def get_bill(self, instance):
-    #     return BillSerializer(instance=instance.bills).data
     class Meta:
         model = Finance_out
         fields = '__all__'
-        # fields = ('amount', 'ref_no', 'invoice', 'payment','tds_tax', 'bill', 'salary_process')
-        # amount = serializers.IntegerField(default=0)
-        # ref_no = serializers.IntegerField(default=0)
-        # invoice_detail = serializers.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True)
-        # payment_detail = serializers.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
-        # tds_tax = serializers.IntegerField(default=0)
-        # bills = serializers.ForeignKey(Bill, on_delete=models.CASCADE, blank=True, null=True)
-        # salary_process = serializers.CharField(max_length=20)
-        # account = serializers.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
-        # final = serializers.IntegerField(null=True, blank=True)
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
@@ -351,7 +281,7 @@ class EvaluationSerializer(serializers.ModelSerializer):
         notes=data.get('notes')
         if not re.match(r"^\d[a-zA-Z]+ [a-zA-Z]+$", evaluation):
             raise serializers.ValidationError("Only alphabets  are allowed. at eval")
-        if not re.match(r'^[A-Za-z]{1,2000}$', notes):
+        if not re.match(r'^[A-Za-z ]{1,2000}$', notes):
             raise serializers.ValidationError("Only alphabets  are allowed.")
         return data
     
