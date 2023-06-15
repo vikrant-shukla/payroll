@@ -79,6 +79,12 @@ class Finance_in(models.Model):
     account = models.ForeignKey(Add_account, on_delete=models.CASCADE, blank=True, null=True)
     vendor=models.ForeignKey(Vendor, on_delete=models.CASCADE, blank=True, null=True)
 
+    class Meta:
+        indexes = [
+                models.Index(fields=['-id']),
+            ]
+
+
     def __str__(self):
         return str(self.invoice_detail)
     

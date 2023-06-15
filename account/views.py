@@ -22,6 +22,8 @@ from django.contrib.auth.tokens import default_token_generator
 from rest_framework import generics
 from django.contrib.auth.models import AbstractUser
 from django_filters.rest_framework import DjangoFilterBackend
+from fpdf import FPDF
+from django.core.paginator import Paginator
 from django.db.models import Sum,Count
 
 
@@ -76,8 +78,8 @@ class SentMailView(APIView):
         try:
             send_mail(subject, body, settings.EMAIL_HOST_USER, [mail.email], fail_silently=False)
             return Response({"status": "mail sent "}, status=status.HTTP_201_CREATED)
-        except:
-            return Response({"status": "An error ocured. Try again!!!"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"status": f"An error ocured.{e} Try again!!!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class OtpVerification(APIView):
@@ -109,7 +111,6 @@ class ResetPasswordview(generics.UpdateAPIView):
                     return Response({'status': 'password successfully changed'}, status=status.HTTP_201_CREATED)
                 return Response({'status': 'An error occured'}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'status': 'An error occured'}, status=status.HTTP_400_BAD_REQUEST)
-          
 
 class AddAccountApi(APIView):
     permission_classes = (IsAuthenticated,)
@@ -163,6 +164,7 @@ class BillApiView(APIView):
         data=limit_off(Bill, request,BillSerializer)           
         
         return Response({'message': data}, status=status.HTTP_200_OK)
+
 
 class InvoiceApiView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -255,6 +257,7 @@ class FinanceOutAPI(APIView):
             "payment_detail":request.data['payment_detail'],
             "tds_tax":request.data['tds_tax'],
             "vendor":request.data['vendor'],
+
             "ref_no":ref_no,
                         
         }
@@ -287,6 +290,7 @@ class Month_Finance_outApi(APIView):
             serializer.save()
             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         
 class FinanceInApi(APIView):
     permission_classes = (IsAuthenticated,)
@@ -295,6 +299,7 @@ class FinanceInApi(APIView):
         data=limit_off(Finance_in, request,FinanceInSerializer)                    
         return Response({'message': data}, status=status.HTTP_200_OK)
 
+
     def post(self, request):
         serializer = FinanceInSerializer(data=request.data)
         if serializer.is_valid():
@@ -302,7 +307,31 @@ class FinanceInApi(APIView):
             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class Financetotal(APIView):
+
+class Financeintotal(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        queryset= Finance_in.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
+        queryset2= Finance_out.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
+
+        return Response({"in":queryset,"out":queryset2})
+    
+class Financeouttotal(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        queryset = Finance_out.objects.aggregate(count = Count('id'),total_amount=Sum('amount'))
+        return Response(queryset)
+
+
+class Graduation_detailsViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
+    permission_classes = [IsAuthenticated, ]
+    queryset = Graduation_details.objects.all()
+    serializer_class = Graduation_detailsSerializer
+
+
+class PostGraduationApi(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     
     def get(self, request):
@@ -439,7 +468,6 @@ class ExcelExport(APIView):
         
         queryset = Finance_out.objects.all()
         serializer = FinanceOutSerializer(queryset, many=True)
-        # Write data to Excel file
         for i, row in enumerate(serializer.data, start=2):
             worksheet.cell(row=i, column=1, value=row['amount'])
             worksheet.cell(row=i, column=2, value=row['ref_no'])
@@ -476,6 +504,7 @@ class ExcelUploadView(APIView):
                 # Add more fields as needed
             )
         return Response({'message': 'Data uploaded successfully'})
+
 
 class FileUploadView(APIView):
     def post(self, request):
@@ -560,4 +589,40 @@ class FileUploadView(APIView):
         else:
             return Response(serializer.errors, status=400)
 
+
+
+class PDF(FPDF):
+    def __init__(self):
+        super().__init__()
+        self.WIDTH = 210
+        self.HEIGHT = 297
+        
+    def header(self):
+        self.image('assets/logo.png', 10, 8, 33)
+        self.set_font('Arial', 'B', 11)
+        self.cell(self.WIDTH - 80)
+        self.cell(60, 1, 'Sales report', 0, 0, 'R')
+        self.ln(20)
+        
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        self.set_text_color(128)
+        self.cell(0, 10, 'Page ' + str(self.page_no()), 0, 0, 'C')
+
+    def page_body(self, images):
+
+        if len(images) == 3:
+            self.image(images[0], 15, 25, self.WIDTH - 30)
+            self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
+            self.image(images[2], 15, self.WIDTH / 2 + 90, self.WIDTH - 30)
+        elif len(images) == 2:
+            self.image(images[0], 15, 25, self.WIDTH - 30)
+            self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
+        else:
+            self.image(images[0], 15, 25, self.WIDTH - 30)
+            
+    def print_page(self, images):
+        self.add_page()
+        self.page_body(images)
 
