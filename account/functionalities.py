@@ -1,26 +1,44 @@
 import random
 
+from requests import Response
+from rest_framework import status
+
 from account.models import Invoice, Payment , Finance_out
 
 
-def random_number(var):
-    invoice_ref_no = random.randint(0000000000, 9999999999)
-    if var== 'in':
-        if Invoice.objects.values('invoice_no').filter(invoice_no = invoice_ref_no):
-            random_number()
-    if var == 'out':
-        if Invoice.objects.values('invoice_ref_no').filter(invoice_ref_no = invoice_ref_no):
-            random_number()
-    return invoice_ref_no
-
-def random_number_payment():
-    payment_ref_no = random.randint(0000000000, 9999999999)
-    if Payment.objects.values('payment_ref_no').filter(payment_ref_no = payment_ref_no):
-        random_number_payment()
-    return payment_ref_no
-
-def random_number_financeout():
-    ref_no = random.randint(0000000000, 9999999999)
-    if Finance_out.objects.values('ref_no').filter(ref_no = ref_no):
-        random_number_financeout()
+def generate_random_number(model, field,length=10):
+    ref_no = str(random.randint(10 ** (length - 1), (10 ** length) - 1)).zfill(length)
+    if model.objects.values(field).filter(**{field: ref_no}):
+        return generate_random_number(model, field, length)
     return ref_no
+
+
+def random_number(model,var,field):
+    if var == 'in':
+        return generate_random_number(model, field)
+    elif var == 'out':
+        return generate_random_number(model, field)
+    else:
+        return generate_random_number(model, field)
+
+    
+def limit_off(model, request, serial):
+        query_params = request.query_params
+        id = query_params['id'] if query_params.get('id') else False
+        limit = query_params['limit'] if query_params.get('limit') else False
+        offset  = query_params['offset'] if query_params.get('offset')  else False
+
+        if id:
+            query = model.objects.filter(id=id)
+        elif limit and offset:
+            query = model.objects.all()[int(offset):int(limit)+int(offset)]
+        elif limit or offset:
+            if limit:
+                query = model.objects.all()[:int(limit)]
+            else:
+                query = model.objects.all()[int(offset):]        
+        else:
+            query = model.objects.all() 
+
+        serializer = serial(query, many=True)
+        return serializer.data 

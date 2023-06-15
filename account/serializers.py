@@ -7,8 +7,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from account.models import *
 from django.contrib.auth.models import AbstractUser
 
-# from account.views import 
-
 
 class UserTableSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,9 +16,7 @@ class UserTableSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['email'] = validated_data['email'].lower()
         validated_data['password'] = make_password(validated_data['password'])
-        # validated_data['firstname'] = (validated_data['firstname']).isalpha()
-        # validated_data['lastname'] = (validated_data['lastname'])
-        # validated_data['mob'] = (validated_data['mob']) 
+       
         return super(UserTableSerializer, self).create(validated_data)
     
     def validate(self,data):
@@ -42,6 +38,12 @@ class UserTableSerializer(serializers.ModelSerializer):
         return data
 
 class AuthTokenSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        attrs['password'] = attrs.get('password')
+        attrs = super().validate(attrs)
+        # attrs['email'] = attrs['email'].lower()
+        
+        return attrs
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
@@ -59,13 +61,12 @@ class OtpVerificationSerializer(serializers.ModelSerializer):
     def validate_otp(self, otp):
         if otp:
             if Otp.objects.filter(otp=otp).exists():
-                user_instance = UserTable.objects.get(email=self.instance["email"])
+                user_instance = UserTable.objects.get(email=self.instance["email"].lower())
                 if Otp.objects.get(email=user_instance.pk):
                     return otp
                 raise serializers.ValidationError('OTP does not matched')
             raise serializers.ValidationError('OTP does not exits.')
         raise serializers.ValidationError('Please generate Otp again!!!')
-
 
 class SetNewPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, max_length=20)
@@ -76,14 +77,13 @@ class SetNewPasswordSerializer(serializers.Serializer):
         fields = '__all__'
 
     def validate_email(self, email):
-        user_instance = UserTable.objects.get(email=email)
+        user_instance = UserTable.objects.get(email=email).lower()
         print(user_instance.email)
         if Otp.objects.filter(email_id=user_instance.pk).exists():
             if Otp.objects.get(email_id=user_instance.pk):
                 return email
         else:
             return serializers.ValidationError('Email does not matched')
-
 
 
 class AddAccountSerializer(serializers.ModelSerializer):
@@ -112,12 +112,9 @@ class AddAccountSerializer(serializers.ModelSerializer):
             
 
 class InvoiceSerializer(serializers.ModelSerializer):    
-    # related_model_id = serializers.PrimaryKeyRelatedField(source='related_model', read_only=True)
-    
-
+  
     class Meta:
-        model = Invoice
-        # fields = '__all__',
+        model = Invoice        
         fields = ('id','invoice_no','invoice_ref_no', 'invoice_date','invoice_amount', 'deduction', 'deduction_reason', 'received_transfer')
 
     def validate(self,data):
@@ -131,30 +128,27 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
-        # fields = ('payment_date', 'related_model_id', 'payment_ref_no', 'received_transfer')
         
         
 class VendorSerializers(serializers.ModelSerializer):
     class Meta:
-        model = Vendor
-        # fields = '__all__'
+        model = Vendor       
         fields = ('id','vendor_name','vendor_address','vendor_mobileno','vendor_GSTno','vendor_PanCard','vendor_TDS')
-        
+
     def validate(self,data):
         vendor_name=data.get('vendor_name')
         vendor_address=data.get('vendor_address')
         mob=str(data.get('vendor_mobileno'))
-        # vendor_GSTno=data.get('vendor_GSTno')
+        vendor_GSTno=data.get('vendor_GSTno')
         pan_no=data.get('vendor_PanCard')
-        # vendor_TDS=data.get('vendor_TDS')
         if not re.match(r'^[a-zA-Z\s]{1,30}$', vendor_name):
             raise serializers.ValidationError("enter valid name")
         if not re.match(r'^[A-Za-z0-9/, ]{1,100}$', vendor_address):
             raise serializers.ValidationError("enter valid address")
         if not mob.isdigit() or len(mob)!=10 or int(mob[0])<6:
             raise serializers.ValidationError('Enter a mob.no.')
-        # if not re.match(r'^[0-9]$', vendor_GSTno):
-        #     raise serializers.ValidationError("enter valid note")
+        if not re.match(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$', vendor_GSTno):
+            raise serializers.ValidationError("enter valid GST no ")
         if not re.match(r'^[A-Z]{5}[0-9]{4}[A-Z]$', pan_no):
             raise serializers.ValidationError('Enter a Pan NUmber')
         # if not re.match(r'^[0-9]$', vendor_TDS):
@@ -177,14 +171,15 @@ class BillSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Only alphabets  are allowed.")
         return data
 
+
 class FinanceOutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Finance_out
         fields = '__all__'
 
+
     def to_representation(self, instance):
         response = super().to_representation(instance)
-        # response['bills'] = BillSerializer(instance.bills).data
         response['invoice_detail'] = InvoiceSerializer(instance.invoice_detail).data
         response['payment_detail'] = PaymentSerializer(instance.payment_detail).data
         # response['account'] = AddAccountSerializer(instance.account).data
@@ -192,30 +187,17 @@ class FinanceOutSerializer(serializers.ModelSerializer):
 
         return response
     
-    # def validate(self,data):
-    #     sal_proces=data.get('salary_process')
-    #     if not re.match(r'^[a-zA-Z]{1,20}$',  sal_proces):
-    #         raise serializers.ValidationError("Only alphabets  are allowed.")
-    #     return data
-
+  
 class Month_Finance_outSerializer(serializers.ModelSerializer):
     class Meta:
         model = Month_Finance_out
         fields = '__all__'
-
-class FinanceInSerializer(serializers.ModelSerializer):
-    # invoice = serializers.SerializerMethodField()
-    # payment = serializers.SerializerMethodField()
-
-    # def get_invoice(self, instance):
-    #     return InvoiceSerializer(instance=instance.invoice_detail).data
-    # def get_payment(self, instance):
-    #     return PaymentSerializer(instance=instance.payment_detail).data
         
+class FinanceInSerializer(serializers.ModelSerializer):
+          
     class Meta:
         model = Finance_in
         fields = '__all__'
-        # fields = ('amount', 'ref_no', 'invoice', 'payment', 'tds_tax')
 
     def to_representation(self, instance):
 
@@ -226,51 +208,12 @@ class FinanceInSerializer(serializers.ModelSerializer):
         response['vendor'] = VendorSerializers(instance.vendor).data
         return response
 
-
-
-class Graduation_detailsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Graduation_details
-        fields = '__all__'
-
-
-class PostGraduationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostGraduation
-        fields = '__all__'
-
-
 class MarksheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Marksheet
         fields = '__all__'
 
-    def to_representation(self, instance):
-        response = super().to_representation(instance)
-        response['graduation_details'] = Graduation_detailsSerializer(instance.graduation_details).data
-        response['post_graduation'] = PostGraduationSerializer(instance.post_graduation).data
-        return response
-
-
-class InsuranceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Insurance
-        fields = '__all__'
-        
-    def to_representation(self, instance):
-        
-        response = super().to_representation(instance)
-        response['emp_insur'] = PayrollSerializer(instance.emp_insur).data
-        
-        return response
-        
-    def validate(self,data):
-        nominee=data.get('nominee')
-        if not re.match(r'^[A-Za-z]{1,200}$', nominee):
-            raise serializers.ValidationError("Only alphabets  are allowed.")
-        return data
-
-
+    
 class EvaluationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evaluation
@@ -300,31 +243,16 @@ class PayrollSerializer(serializers.ModelSerializer):
         model = Payroll
         fields = ['id','employee_id','firstname','lastname', 'fathername','mothername',
                 'adhar_no','adhar_attach','pan_no', 'pan_attach', 
-                'marksheet_attach', 'graduation', 'dob', 'doj',
-                'emp_insurance','probation_period']
+                 'graduation', 'dob', 'doj',
+                'probation_period']
 
-    # def get_probation_period(self, obj):
-    #     probation_days = 90 # adjust as needed
-    #     start_date = obj.doj
-    #     end_date = start_date + timedelta(days=probation_days)
-    #     today = date.today()
-    #     days_left = (end_date - today).days
-    #     return days_left
     
-
     def get_probation_period(self, obj):
         probation_days = obj.probation_days
         start_date = obj.doj
         end_date = start_date + timedelta(days=probation_days)
         return end_date    
     
-    def to_representation(self, instance):
-        response = super().to_representation(instance)
-        response['marksheet_attach'] = MarksheetSerializer(instance.marksheet_attach).data
-        # response['evalution'] = EvaluationSerializer(instance.evalution).data
-        # response['insurance'] = InsuranceSerializer(instance.insurance).data
-        # response['account'] = AddAccountSerializer(instance.account).data
-        return response
     
     def validate(self,data):
         firstname=data.get('firstname')
@@ -351,11 +279,9 @@ class PayrollSerializer(serializers.ModelSerializer):
 class ExcelUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
     def validate_file(self, value):
-        # Add any validation logic for the file, if required
-        # For example: check file extension, file size, etc.
+        
         return value
     
-# class choosefileSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = choosefile
-#         fields = '__all__'
+class FileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField(required=True)
+    
