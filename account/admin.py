@@ -16,14 +16,13 @@ class billAdmin(admin.ModelAdmin):
 admin.site.register(Bill, billAdmin)
 admin.site.register(Finance_out)
 admin.site.register(Evaluation)
-admin.site.register(Insurance)
-admin.site.register(Graduation_details)
-admin.site.register(PostGraduation)
 admin.site.register(Marksheet)
 admin.site.register(Payroll)
 admin.site.register(MyModel)
 admin.site.register(Vendor)
 admin.site.register(Otp)
 admin.site.register(Month_Finance_out)
+class month(admin.ModelAdmin):
+    list_display = ['date','amount','bill','salary_process' ]
 
 
