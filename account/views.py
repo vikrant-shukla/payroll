@@ -1,18 +1,21 @@
+import datetime
 from email import message
 import random
+from .serializers import *
+from .models import *
+import time
+from django.forms import ValidationError
 from FP import settings
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
-from account.functionalities import random_number, random_number_payment , random_number_financeout
-from account.serializers import *
+from account.functionalities import limit_off, random_number
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from django.http import HttpResponse
 import openpyxl
 import pandas as pd
-from rest_framework.views import APIView
 from .models import MyModel,Invoice
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
@@ -21,7 +24,6 @@ from django.contrib.auth.models import AbstractUser
 from django_filters.rest_framework import DjangoFilterBackend
 from fpdf import FPDF
 from django.core.paginator import Paginator
-
 from django.db.models import Sum,Count
 
 
@@ -52,17 +54,17 @@ class LoginAPI(TokenObtainPairView):
     permission_classes = (AllowAny,)
     serializer_class = AuthTokenSerializer
     
+    
 class SentMailView(APIView):
     """Api to sent the otp to user mail  id to reset the password"""
 
     def post(self, request):
         """sending the otp to user mail id"""
         try:
-            mail = UserTable.objects.get(email=request.data['email'])
+            mail = UserTable.objects.get(email=request.data['email'].lower())
         except:
             return Response({'error': 'Email does not exits.'}, status=status.HTTP_404_NOT_FOUND )
-        
-        
+                
 
         if Otp.objects.filter(email=mail).exists:
             Otp.objects.filter(email=mail).delete()
@@ -102,31 +104,45 @@ class ResetPasswordview(generics.UpdateAPIView):
             user_object = UserTable.objects.get(email=request_email)
             if Otp.objects.filter(email_id=user_object.pk).exists():
                 if UserTable.objects.get(email=request_email):
-                    user_object.password = make_password(request.data['password'])
+                    user_object.password = make_password(request.data['password'])                    
                     user_object.save()
                     otp_del = Otp.objects.filter(email=user_object.id)
                     otp_del.delete()
                     return Response({'status': 'password successfully changed'}, status=status.HTTP_201_CREATED)
                 return Response({'status': 'An error occured'}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'status': 'An error occured'}, status=status.HTTP_400_BAD_REQUEST)
-    
-
 
 class AddAccountApi(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        query_parameter = request.query_params
-        data = query_parameter['id'] if len(query_parameter) != 0 else False
-        if data:
-            query = Add_account.objects.filter(id=query_parameter['id'])
+        query_params = request.query_params
+        id = query_params['id'] if query_params.get('id') else False
+        limit = query_params['limit'] if query_params.get('limit') else False
+        offset  = query_params['offset'] if query_params.get('offset')  else False
+
+        if id:
+            query = Add_account.objects.filter(id=id)
+        elif limit and offset:
+            query = Add_account.objects.all()[int(offset):int(limit)+int(offset)]
+        elif limit or offset:
+            if limit:
+                query = Add_account.objects.all()[:int(limit)]
+            else:
+                query = Add_account.objects.all()[int(offset):]        
         else:
-            query = Add_account.objects.all()
+            query = Add_account.objects.all() 
+
         serializer = AddAccountSerializer(query, many=True)
-        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+        return Response({'message': serializer.data}, status=status.HTTP_200_OK)       
 
-        
-
+    def post(self, request):
+        serializer = AddAccountSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+       
     def post(self, request):
         serializer = AddAccountSerializer(data=request.data)
         if serializer.is_valid():
@@ -143,30 +159,19 @@ class BillApiView(APIView):
             serializer.save()
             return Response({"message": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def get(self, request):        
+        data=limit_off(Bill, request,BillSerializer)           
+        
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
-    def get(self, request):
-        query_parameter = request.query_params
-        data = query_parameter['id'] if len(query_parameter) != 0 else False
-        if data:
-            query = Bill.objects.filter(id=query_parameter['id'])
-        else:
-            query = Bill.objects.all()
-        serializer = BillSerializer(query, many=True)
-        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
 
 class InvoiceApiView(APIView):
     permission_classes = (IsAuthenticated,)
     
-    def get(self, request):
-        query_parameter = request.query_params
-        data = query_parameter['id'] if len(query_parameter) != 0 else False
-        if data:
-            query = Invoice.objects.filter(id=query_parameter['id'])
-        else:
-            query = Invoice.objects.all()
-        serializer = InvoiceSerializer(query, many=True)
-        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
-
+    def get(self, request):        
+        data=limit_off(Invoice, request,InvoiceSerializer)                    
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
     
     def post(self, request):
@@ -180,9 +185,9 @@ class InvoiceApiView(APIView):
         var = request.data['received_transfer']
         if var == 'in':
             data["invoice_no"] = request.data['invoice_no']
-            data["invoice_ref_no"] = random_number(var)
+            data["invoice_ref_no"] = random_number(Invoice,var,field='invoice_no')
         if var == 'out':
-            data["invoice_no"] = random_number(var)
+            data["invoice_no"] = random_number(Invoice,var,field='invoice_no')
         serializer = InvoiceSerializer(data=data)      
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -203,19 +208,13 @@ class InvoiceApiView(APIView):
 
 class PaymentApiView(APIView):
     permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        query_parameter = request.query_params
-        data = query_parameter['id'] if len(query_parameter) != 0 else False
-        if data:
-            query = Payment.objects.filter(id=query_parameter['id'])
-        else:
-            query = Payment.objects.all()
-        serializer = PaymentSerializer(query, many=True)
-        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+    
+    def get(self, request):       
+        data=limit_off(Payment, request,PaymentSerializer)                    
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        payment_ref_no = random_number_payment()
+        payment_ref_no = random_number(Payment,field='payment_ref_no',var='out')
         data = {
             "payment_date":request.data['payment_date'],
             "payment_ref_no":payment_ref_no,
@@ -231,15 +230,9 @@ class PaymentApiView(APIView):
 class VendorApiView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request):
-        query_parameter = request.query_params
-        data = query_parameter['id'] if len(query_parameter) != 0 else False
-        if data:
-            query = Vendor.objects.filter(id=query_parameter['id'])
-        else:
-            query = Vendor.objects.all()
-        serializer = VendorSerializers(query, many=True)
-        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+    def get(self, request):        
+        data=limit_off(Vendor, request,VendorSerializers)                    
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = VendorSerializers(data=request.data)
@@ -252,22 +245,21 @@ class VendorApiView(APIView):
 class FinanceOutAPI(APIView):
     permission_classes = (IsAuthenticated,)
     
-    def get(self, request):
-        books = Finance_out.objects.all()
-        serializer = FinanceOutSerializer(books, many=True)
-        return Response(serializer.data)
-
+    def get(self, request):        
+        data=limit_off(Finance_out, request,FinanceOutSerializer)                    
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        ref_no = random_number_financeout()
+        ref_no = random_number(Finance_out,field='ref_no',var='out')
         data = {
             "amount":request.data['amount'],
             "invoice_detail":request.data['invoice_detail'],
             "payment_detail":request.data['payment_detail'],
             "tds_tax":request.data['tds_tax'],
             "vendor":request.data['vendor'],
-            "ref_no":ref_no
-            
+
+            "ref_no":ref_no,
+                        
         }
         serializer = FinanceOutSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
@@ -279,28 +271,34 @@ class FinanceOutAPI(APIView):
 class Month_Finance_outApi(APIView):
     permission_classes = (IsAuthenticated,)
     
-    def get(self, request):
-        pym = Month_Finance_out.objects.all()
-        serializer = Month_Finance_outSerializer(pym, many=True)
-        return Response(serializer.data)
+    def get(self, request):        
+        data=limit_off(Month_Finance_out, request,Month_Finance_outSerializer)                    
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = Month_Finance_outSerializer(data=request.data)
+        data = {
+            "amount":request.data['amount'],
+            "bill": request.data['bill'],
+            "salary_process": request.data['salary_process'],
+            
+            }
+                
+        data["d"] = str(datetime.datetime.now()).split(" ")[0]        
+        time.sleep(20)
+        serializer = Month_Finance_outSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+        
 class FinanceInApi(APIView):
     permission_classes = (IsAuthenticated,)
     
-    def get(self, request):
-        # paginator = Paginator(Finance_in.objects.all().order_by('asc'), 10)
-        pym =Finance_in.objects.order_by('id')[:10]
-        # pym = paginator.get_page(1)  # Get the first page
+    def get(self, request):        
+        data=limit_off(Finance_in, request,FinanceInSerializer)                    
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
-        serializer = FinanceInSerializer(pym, many=True)
-        return Response(serializer.data)
 
     def post(self, request):
         serializer = FinanceInSerializer(data=request.data)
@@ -308,6 +306,7 @@ class FinanceInApi(APIView):
             serializer.save()
             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class Financeintotal(APIView):
     permission_classes = (IsAuthenticated,)
@@ -335,9 +334,11 @@ class Graduation_detailsViewSet(viewsets.ModelViewSet):
 class PostGraduationApi(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     
-    queryset = PostGraduation.objects.all()
-    serializer_class = PostGraduationSerializer
-
+    def get(self, request):
+        queryset= Finance_in.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
+        queryset2= Finance_out.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
+        return Response({'finance_in':queryset,'finance_out':queryset2})
+   
 
 class MarksheetApi(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
@@ -346,39 +347,12 @@ class MarksheetApi(viewsets.ModelViewSet):
     serializer_class = MarksheetSerializer
 
 
-class InsuranceAPI(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        query_parameter = request.query_params
-        data = query_parameter['id'] if len(query_parameter) != 0 else False
-        if data:
-            query = Insurance.objects.filter(id=query_parameter['id'])
-        else:
-            query = Insurance.objects.all()
-        serializer = InsuranceSerializer(query, many=True)
-        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        serializer = InsuranceSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class EvaluationAPI(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request):
-        query_parameter = request.query_params
-        data = query_parameter['id'] if len(query_parameter) != 0 else False
-        if data:
-            query = Evaluation.objects.filter(id=query_parameter['id'])
-        else:
-            query = Evaluation.objects.all()
-        serializer = EvaluationSerializer(query, many=True)
-        return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+    def get(self, request):        
+        data=limit_off(Evaluation, request,EvaluationSerializer)                    
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = EvaluationSerializer(data=request.data)
@@ -391,10 +365,9 @@ class EvaluationAPI(APIView):
 class PayrollAPI(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request):
-        books = Payroll.objects.all()
-        serializer = PayrollSerializer(books, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request):        
+        data=limit_off(Payroll, request,PayrollSerializer)                    
+        return Response({'message': data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = PayrollSerializer(data=request.data)
@@ -435,10 +408,7 @@ class ExcelExportView(APIView):
         worksheet['T1'] = 'ifsc'
         worksheet['U1'] = 'current_bal'
         worksheet['V1'] = 'current_due'
-
-        # all_fields = Finance_in._meta.fields
-
-        # Get data
+       
         queryset = Finance_in.objects.all()
         serializer = FinanceInSerializer(queryset, many=True)
         # Write data to Excel file
@@ -466,10 +436,8 @@ class ExcelExportView(APIView):
             worksheet.cell(row=i, column=21, value=row['account']['current_bal'])
             worksheet.cell(row=i, column=22, value=row['account']['current_due'])
 
-
         workbook.save(response)
         return response
-
 
 class ExcelExport(APIView):
     def get(self, request):
@@ -497,9 +465,7 @@ class ExcelExport(APIView):
         worksheet['O1'] = 'Bill Amount'
         worksheet['P1'] = 'Bill Type'
         worksheet['Q1'] = 'Salary process'
-
-
-        # Get data
+        
         queryset = Finance_out.objects.all()
         serializer = FinanceOutSerializer(queryset, many=True)
         for i, row in enumerate(serializer.data, start=2):
@@ -524,7 +490,6 @@ class ExcelExport(APIView):
         workbook.save(response)
         return response
     
-
 class ExcelUploadView(APIView):
     def post(self, request, format=None):
         serializer = ExcelUploadSerializer(data=request.data)
@@ -539,6 +504,90 @@ class ExcelUploadView(APIView):
                 # Add more fields as needed
             )
         return Response({'message': 'Data uploaded successfully'})
+
+
+class FileUploadView(APIView):
+    def post(self, request):
+        serializer = FileUploadSerializer(data=request.data)
+        if serializer.is_valid():
+            file = serializer.validated_data['file']
+            try:
+                df = pd.read_csv(file)
+                print(df)
+                import psycopg2
+                conn = psycopg2.connect(
+                    host='localhost',
+                    database='payroll',
+                    user='postgres',
+                    password='Sourabh12'
+                )
+                
+                from datetime import datetime
+                for _, row in df.iterrows():
+                    # Create AccountVendor object
+                    vendor = Vendor(
+                        vendor_name=row['vendor_name'],
+                        vendor_address=row['vendor_address'],
+                        vendor_mobileno=row['vendor_mobileno'],
+                        vendor_GSTno=row['vendor_GSTno'],
+                        vendor_PanCard=row['vendor_PanCard'],
+                        vendor_TDS=row['vendor_TDS']
+                    )
+                    vendor.save()
+                    # Create AccountAddAccount object
+                    account = Add_account(
+                        acc_no=row['acc_no'],
+                        ifsc=row['ifsc'],
+                        current_bal=row['current_bal'],
+                        current_due=row['current_due']
+                    )
+                    account.save()
+                    # Convert payment_date format to "YYYY-MM-DD"
+                    payment_date_str = row['payment_date']
+                    try:
+                        payment_date_obj = datetime.strptime(payment_date_str, "%d-%m-%Y").date()
+                        formatted_payment_date = payment_date_obj.strftime("%Y-%m-%d")
+                        # Create AccountPayment object with formatted payment_date
+                        payment = Payment(
+                            payment_date=formatted_payment_date,
+                            payment_ref_no=row['payment_ref_no'],
+                            received_payment_transfer=row['received_payment_transfer']
+                        )
+                        payment.save()
+                    except ValueError:
+                        raise ValidationError('Invalid payment date format')
+                    # Create AccountInvoice object
+                    invoice_date_str = row['invoice_date']
+                    try:
+                        invoice_date_obj = datetime.strptime(invoice_date_str, "%d-%m-%Y").date()
+                        formatted_invoice_date = invoice_date_obj.strftime("%Y-%m-%d")
+                        invoice = Invoice(
+                            invoice_no=row['Invoice_no'],
+                            invoice_date=formatted_invoice_date,
+                            invoice_amount=row['invoice_amount'],
+                            deduction=row['deduction'],
+                            deduction_reason=row['deduction_reason'],
+                            received_transfer=row['received_transfer']
+                        )
+                        invoice.save()
+                    except ValueError:
+                        raise ValidationError('Invalid payment date format')
+                    # Create FinanceIn object with foreign key relationships
+                    finance_in = Finance_in(
+                        amount=row['Amount'],
+                        ref_no=row['Ref_no'],
+                        tds_tax=row['Tds'],
+                        vendor=vendor,
+                        account=account,
+                        invoice_detail=invoice,
+                        payment_detail=payment
+                    )
+                    finance_in.save()
+                return Response('CSV file uploaded and printed on terminal')
+            except pd.errors.ParserError:
+                return Response('Invalid CSV file', status=400)
+        else:
+            return Response(serializer.errors, status=400)
 
 
 
@@ -576,3 +625,4 @@ class PDF(FPDF):
     def print_page(self, images):
         self.add_page()
         self.page_body(images)
+
