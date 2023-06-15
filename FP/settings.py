@@ -124,6 +124,11 @@ REST_FRAMEWORK = {
 }
 
 
+AUTHENTICATION_BACKENDS = [
+    'account.authentication_backend.LowercaseEmailBackend',
+]
+
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
