@@ -43,6 +43,7 @@ urlpatterns = [
     path('exportout', ExcelExport.as_view(), name='export'),
     path('upload', ExcelUploadView.as_view(), name='upload'),
     path('csvupload', FileUploadView.as_view(), name='file-upload'),
+    # 'account.authentication_backend.LowercaseEmailBackend'
     # path('choosefile/', views.choosefileAPI.as_view(), name='choosefile'),
     path('Financetotal', views.Financetotal.as_view(), name='Financetotal'),
     # path('Financemonthly/', views.Financemonthly.as_view(), name='Financemonthly'),
