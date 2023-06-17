@@ -123,6 +123,10 @@ REST_FRAMEWORK = {
     
 }
 
+AUTHENTICATION_BACKENDS = [
+    'account.functionalities.LowercaseEmailBackend',
+]
+
 
 AUTHENTICATION_BACKENDS = [
     'account.authentication_backend.LowercaseEmailBackend',

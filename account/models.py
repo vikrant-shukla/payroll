@@ -62,7 +62,7 @@ class Vendor(models.Model):
     vendor_name=models.CharField(max_length=30)
     vendor_address=models.CharField(max_length=100)
     vendor_mobileno=models.BigIntegerField()
-    vendor_GSTno=models.CharField(max_length=15,unique=True)
+    vendor_GSTno=models.CharField(max_length=15)
     vendor_PanCard=models.CharField(max_length=10,unique=True)
     vendor_TDS=models.IntegerField()
     

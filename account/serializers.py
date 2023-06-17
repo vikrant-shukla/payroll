@@ -85,7 +85,6 @@ class SetNewPasswordSerializer(serializers.Serializer):
         else:
             return serializers.ValidationError('Email does not matched')
 
-
 class AddAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Add_account
@@ -147,9 +146,9 @@ class VendorSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError("enter valid address")
         if not mob.isdigit() or len(mob)!=10 or int(mob[0])<6:
             raise serializers.ValidationError('Enter a mob.no.')
-        if not re.match(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$', vendor_GSTno):
+        if not re.match(r'^[0-9]{2}[A-Za-z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}Z[0-9A-Za-z]{1}$', vendor_GSTno):
             raise serializers.ValidationError("enter valid GST no ")
-        if not re.match(r'^[A-Z]{5}[0-9]{4}[A-Z]$', pan_no):
+        if not re.match(r'^[a-zA-Z]{5}[0-9]{4}[A-Za-z]$', pan_no):
             raise serializers.ValidationError('Enter a Pan NUmber')
         # if not re.match(r'^[0-9]$', vendor_TDS):
         #     raise serializers.ValidationError("enter valid note")
@@ -244,7 +243,7 @@ class PayrollSerializer(serializers.ModelSerializer):
         fields = ['id','employee_id','firstname','lastname', 'fathername','mothername',
                 'adhar_no','adhar_attach','pan_no', 'pan_attach', 
                  'graduation', 'dob', 'doj',
-                'probation_period']
+                'probation_period','policy_no','nominee', 'insured_value']
 
     
     def get_probation_period(self, obj):
