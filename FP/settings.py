@@ -89,7 +89,7 @@ DATABASES = {
     'ENGINE': 'django.db.backends.postgresql_psycopg2',
     'NAME': 'payroll',
     'USER': 'postgres',
-    'PASSWORD': 'Sourabh12',
+    'PASSWORD': 'postgres',
     'HOST': 'localhost',
     'PORT': '5432'  
 }
@@ -125,6 +125,11 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = [
     'account.functionalities.LowercaseEmailBackend',
+]
+
+
+AUTHENTICATION_BACKENDS = [
+    'account.authentication_backend.LowercaseEmailBackend',
 ]
 
 

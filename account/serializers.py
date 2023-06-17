@@ -32,7 +32,7 @@ class UserTableSerializer(serializers.ModelSerializer):
         if not re.match(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$', email):
             raise serializers.ValidationError('Enter a email.')
         if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()-_=+{}[\]|\\:;<>,.?/~]).{6,}$', password):
-            raise serializers.ValidationError('Enter a password.')
+            raise serializers.ValidationError('Enter a valid password.')
         if not mob.isdigit() or len(mob)>10 or int(mob[0])<6:
             raise serializers.ValidationError('Enter a valid mob.no.')
         return data
@@ -103,9 +103,9 @@ class AddAccountSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("enter valid account no")  
         if not re.match(r'^[A-Z]{4}0[0-9]{6}$', ifsc_c):
             raise serializers.ValidationError('Enter a valid IFSC code.')
-        if not re.match(r'^[0-9]*\.?[0-9]{2}+$', c_bal):
+        if not re.match(r'^[0-9]*\.?[0-9]{2}$', c_bal):
             raise serializers.ValidationError('Enter a valid balance.')
-        if not re.match(r'^[0-9]*\.?[0-9]{2}+$', c_due):
+        if not re.match(r'^[0-9]*\.?[0-9]{2}$', c_due):
             raise serializers.ValidationError('Enter a valid balance.')
         return data
             
@@ -124,7 +124,6 @@ class InvoiceSerializer(serializers.ModelSerializer):
         return data
 
 class PaymentSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = Payment
         fields = '__all__'
@@ -134,7 +133,7 @@ class VendorSerializers(serializers.ModelSerializer):
     class Meta:
         model = Vendor       
         fields = ('id','vendor_name','vendor_address','vendor_mobileno','vendor_GSTno','vendor_PanCard','vendor_TDS')
-                
+
     def validate(self,data):
         vendor_name=data.get('vendor_name')
         vendor_address=data.get('vendor_address')
@@ -170,14 +169,14 @@ class BillSerializer(serializers.ModelSerializer):
         if not re.match(r'^[a-zA-Z]*$',  b_type):
             raise serializers.ValidationError("Only alphabets  are allowed.")
         return data
-    
-    
+
+
 class FinanceOutSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = Finance_out
         fields = '__all__'
-        
+
+
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['invoice_detail'] = InvoiceSerializer(instance.invoice_detail).data
