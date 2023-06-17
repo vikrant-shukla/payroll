@@ -72,7 +72,7 @@ class Vendor(models.Model):
 
 class Finance_in(models.Model):
     amount = models.BigIntegerField(default=0)
-    ref_no = models.IntegerField(default=0, unique=True)
+    ref_no = models.CharField(max_length=64,default=0, unique=True)
     invoice_detail = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True )
     payment_detail = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
     tds_tax = models.IntegerField(default=0)
@@ -112,7 +112,7 @@ class Finance_out(models.Model):
     
         
 class Month_Finance_out(models.Model):
-    d  = models.DateField(default=None)
+    date  = models.DateField(default=None)
     amount = models.IntegerField(default=0)    
     bill = models.IntegerField(default=0) 
     salary_process = models.CharField(max_length=20)

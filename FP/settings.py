@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-^=il@o3q+f&ow@%l0atx*iqt&5uhe(-p$(b0($8_%m(cebzq_j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -117,19 +117,12 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': 
         ('rest_framework_simplejwt.authentication.JWTAuthentication',),
-    'DEFAULT_PAGINATION_CLASS': ('rest_framework.pagination.LimitOffsetPagination',),
-    'PAGE_SIZE': 100
     
     
 }
 
 AUTHENTICATION_BACKENDS = [
     'account.functionalities.LowercaseEmailBackend',
-]
-
-
-AUTHENTICATION_BACKENDS = [
-    'account.authentication_backend.LowercaseEmailBackend',
 ]
 
 
