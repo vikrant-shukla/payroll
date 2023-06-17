@@ -206,6 +206,13 @@ class FinanceInSerializer(serializers.ModelSerializer):
         response['account'] = AddAccountSerializer(instance.account).data
         response['vendor'] = VendorSerializers(instance.vendor).data
         return response
+    
+    def validate(self,data):
+        ref_no=data.get('ref_no')
+        if not re.match(r'^[A-Za-z0-9]*$', ref_no):
+            raise serializers.ValidationError("combination of  alphabets and numbers are allowed")
+
+        return data
 
 class MarksheetSerializer(serializers.ModelSerializer):
     class Meta:

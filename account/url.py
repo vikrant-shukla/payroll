@@ -1,18 +1,12 @@
-from django.contrib import admin
 from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
-from django.conf.urls.static import static
-from django.conf import settings
-from account.views import  MarksheetApi, ExcelExportView, ExcelExport
 from rest_framework.routers import DefaultRouter
 from account import views
-from .views import ExcelUploadView,FileUploadView
+
 
 
 router=DefaultRouter()
-# router.register('files',Graduation_detailsViewSet, basename='files')
-# router.register('files',PostGraduationApi, basename='files')
-router.register('files',MarksheetApi, basename='files')
+router.register('files',views.MarksheetApi, basename='files')
 
 
 urlpatterns = [
@@ -34,21 +28,10 @@ urlpatterns = [
     path('vendor', views.VendorApiView.as_view(),name='vendor'),
     path('payroll', views.PayrollAPI.as_view(), name='payroll'),
     path('marksheet', views.MarksheetApi.as_view({'get':'list','post':'create'}), name='marksheet'),
-    # path('garduationmarksheet', views.Graduation_detailsViewSet.as_view({'get':'list','post':'create'}), name='garduationmarksheet'),
-    # path('Postgarduationmarksheet', views.PostGraduationApi.as_view({'get':'list','post':'create'}), name='Postgarduationmarksheet'),
     path('evaluation', views.EvaluationAPI.as_view(), name='evaluation'),
-    # path('insuarance', views.InsuranceAPI.as_view(), name='insuarance'),
     path ('api', include(router.urls)),
-    path('exportin', ExcelExportView.as_view(), name='export'),
-    path('exportout', ExcelExport.as_view(), name='export'),
-    path('upload', ExcelUploadView.as_view(), name='upload'),
-    path('csvupload', FileUploadView.as_view(), name='file-upload'),
-    # 'account.authentication_backend.LowercaseEmailBackend'
-    # path('choosefile/', views.choosefileAPI.as_view(), name='choosefile'),
+    path('exportin', views.Finance_in_ExcelExport.as_view(), name='export'),
+    path('exportout', views.Finance_Out_ExcelExport.as_view(), name='export'),
+    path('upload', views.Finance_In_FileUploadView.as_view(), name='upload'),
     path('Financetotal', views.Financetotal.as_view(), name='Financetotal'),
-    # path('Financemonthly/', views.Financemonthly.as_view(), name='Financemonthly'),
-    
-
-
-
-] 
+    ] 

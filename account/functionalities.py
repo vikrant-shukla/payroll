@@ -1,10 +1,5 @@
 import random
-
-from requests import Response
-from rest_framework import status
-
-from account.models import Invoice, Payment , Finance_out
-
+from django.contrib.auth.backends import ModelBackend
 
 def generate_random_number(model, field,length=10):
     ref_no = str(random.randint(10 ** (length - 1), (10 ** length) - 1)).zfill(length)
@@ -43,7 +38,6 @@ def limit_off(model, request, serial):
         serializer = serial(query, many=True)
         return serializer.data 
     
-from django.contrib.auth.backends import ModelBackend
 class LowercaseEmailBackend(ModelBackend):
     def authenticate(self, request, email=None, password=None, **kwargs):
         if email is None:

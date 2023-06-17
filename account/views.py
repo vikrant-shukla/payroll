@@ -1,7 +1,4 @@
-
 import datetime
-from email import message
-
 import random
 from .serializers import *
 from .models import *
@@ -21,11 +18,7 @@ import pandas as pd
 from .models import MyModel,Invoice
 from django.core.mail import send_mail
 from rest_framework import generics
-
 from django_filters.rest_framework import DjangoFilterBackend
-from fpdf import FPDF
-
-from django.core.paginator import Paginator
 from django.db.models import Sum,Count
 
 
@@ -312,7 +305,7 @@ class FinanceInApi(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class Financeintotal(APIView):
+class Financetotal(APIView):
     permission_classes = (IsAuthenticated,)
     def get(self, request):
         queryset= Finance_in.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
@@ -320,29 +313,6 @@ class Financeintotal(APIView):
 
         return Response({"in":queryset,"out":queryset2})
     
-class Financeouttotal(APIView):
-    permission_classes = (IsAuthenticated,)
-    def get(self, request):
-        queryset = Finance_out.objects.aggregate(count = Count('id'),total_amount=Sum('amount'))
-        return Response(queryset)
-
-
-class Graduation_detailsViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
-    
-    permission_classes = [IsAuthenticated, ]
-    queryset = Graduation_details.objects.all()
-    serializer_class = Graduation_detailsSerializer
-
-
-class PostGraduationApi(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
-    
-    def get(self, request):
-        queryset= Finance_in.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
-        queryset2= Finance_out.objects.prefetch_related().aggregate(count=Count('id'), total_amount=Sum('amount'))
-        return Response({'finance_in':queryset,'finance_out':queryset2})
-   
 
 class MarksheetApi(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
@@ -381,7 +351,7 @@ class PayrollAPI(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ExcelExportView(APIView):
+class Finance_in_ExcelExport(APIView):
     def get(self, request):
         response = HttpResponse(content_type='application/ms-excel')
         response['Content-Disposition'] = 'attachment; filename="finance-in.xlsx"'
@@ -389,19 +359,19 @@ class ExcelExportView(APIView):
         worksheet = workbook.active
         # Write headers
         headers = [
-    'Amount',
-    'Ref_no',
-    'Invoice_no',
-    'invoice_date',
-    'invoice_amount',
-    'deduction',
-    'deduction_reason',
-    'received_transfer',
-    'payment_date',
-    'payment_ref_no',
-    'received_transfer',
-    'Tds'
-]
+                    'Amount',
+                    'Ref_no',
+                    'Invoice_no',
+                    'invoice_date',
+                    'invoice_amount',
+                    'deduction',
+                    'deduction_reason',
+                    'received_transfer',
+                    'payment_date',
+                    'payment_ref_no',
+                    'received_transfer',
+                    'Tds'
+                ]
         for index, header in enumerate(headers):
             cell = chr(ord('A') + index) + '1'
             worksheet[cell] = header
@@ -411,19 +381,19 @@ class ExcelExportView(APIView):
         serializer = FinanceInSerializer(queryset, many=True)
         # Write data to Excel file
         column_mapping = [
-    (1, 'amount'),
-    (2, 'ref_no'),
-    (3, 'invoice_detail.invoice_no'),
-    (4, 'invoice_detail.invoice_date'),
-    (5, 'invoice_detail.invoice_amount'),
-    (6, 'invoice_detail.deduction'),
-    (7, 'invoice_detail.deduction_reason'),
-    (8, 'invoice_detail.received_transfer'),
-    (9, 'payment_detail.payment_date'),
-    (10, 'payment_detail.payment_ref_no'),
-    (11, 'payment_detail.received_transfer'),
-    (12, 'tds_tax')
-]
+                    (1, 'amount'),
+                    (2, 'ref_no'),
+                    (3, 'invoice_detail.invoice_no'),
+                    (4, 'invoice_detail.invoice_date'),
+                    (5, 'invoice_detail.invoice_amount'),
+                    (6, 'invoice_detail.deduction'),
+                    (7, 'invoice_detail.deduction_reason'),
+                    (8, 'invoice_detail.received_transfer'),
+                    (9, 'payment_detail.payment_date'),
+                    (10, 'payment_detail.payment_ref_no'),
+                    (11, 'payment_detail.received_transfer'),
+                    (12, 'tds_tax')
+                ]
         for i, row in enumerate(serializer.data, start=2):
             for column, key in column_mapping:
                 value = row
@@ -434,7 +404,9 @@ class ExcelExportView(APIView):
                 worksheet.cell(row=i, column=column, value=value)
         workbook.save(response)
         return response
-class ExcelExport(APIView):
+
+
+class Finance_Out_ExcelExport(APIView):
     def get(self, request):
         response = HttpResponse(content_type='application/ms-excel')
         response['Content-Disposition'] = 'attachment; filename="finance-out.xlsx"'
@@ -499,23 +471,8 @@ class ExcelExport(APIView):
         workbook.save(response)
         return response
 
-class ExcelUploadView(APIView):
-    def post(self, request, format=None):
-        serializer = ExcelUploadSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        file = serializer.validated_data['file']
-        df = pd.read_excel(file)  # Read the Excel file using pandas
-        # Iterate over the rows and save each row as a new instance of the model
-        for index, row in df.iterrows():
-            MyModel.objects.create(
-                column1=row['Column1'],
-                column2=row['Column2'],
-                # Add more fields as needed
-            )
-        return Response({'message': 'Data uploaded successfully'})
 
-
-class FileUploadView(APIView):
+class Finance_In_FileUploadView(APIView):
     def post(self, request):
         serializer = FileUploadSerializer(data=request.data)
         if serializer.is_valid():
@@ -600,94 +557,58 @@ class FileUploadView(APIView):
 
 
 
-class PDF(FPDF):
-    def __init__(self):
-        super().__init__()
-        self.WIDTH = 210
-        self.HEIGHT = 297
-        
-    def header(self):
-        self.image('assets/logo.png', 10, 8, 33)
-        self.set_font('Arial', 'B', 11)
-        self.cell(self.WIDTH - 80)
-        self.cell(60, 1, 'Sales report', 0, 0, 'R')
-        self.ln(20)
-        
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.set_text_color(128)
-        self.cell(0, 10, 'Page ' + str(self.page_no()), 0, 0, 'C')
 
-    def page_body(self, images):
-
-        if len(images) == 3:
-            self.image(images[0], 15, 25, self.WIDTH - 30)
-            self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
-            self.image(images[2], 15, self.WIDTH / 2 + 90, self.WIDTH - 30)
-        elif len(images) == 2:
-            self.image(images[0], 15, 25, self.WIDTH - 30)
-            self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
-        else:
-            self.image(images[0], 15, 25, self.WIDTH - 30)
-            
-    def print_page(self, images):
-        self.add_page()
-        self.page_body(images)
-
-
-
-class ExcelExportViewtrail(APIView):
-    def get(self, request):
-        response = HttpResponse(content_type='application/ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="finance-in.xlsx"'
-        workbook = openpyxl.Workbook()
-        worksheet = workbook.active
-        # Write headers
-        headers = [
-                    'Amount',
-                    'Ref_no',
-                    'Invoice_no',
-                    'invoice_date',
-                    'invoice_amount',
-                    'deduction',
-                    'deduction_reason',
-                    'received_transfer',
-                    'payment_date',
-                    'payment_ref_no',
-                    'received_transfer',
-                    'Tds'
-                ]
-        for index, header in enumerate(headers):
-            cell = chr(ord('A') + index) + '1'
-            worksheet[cell] = header
-        # all_fields = Finance_in._meta.fields
-        # Get data
-        queryset = Finance_in.objects.all()
-        serializer = FinanceInSerializer(queryset, many=True)
-        # Write data to Excel file
-        column_mapping = [
-                    (1, 'amount'),
-                    (2, 'ref_no'),
-                    (3, 'invoice_detail.invoice_no'),
-                    (4, 'invoice_detail.invoice_date'),
-                    (5, 'invoice_detail.invoice_amount'),
-                    (6, 'invoice_detail.deduction'),
-                    (7, 'invoice_detail.deduction_reason'),
-                    (8, 'invoice_detail.received_transfer'),
-                    (9, 'payment_detail.payment_date'),
-                    (10, 'payment_detail.payment_ref_no'),
-                    (11, 'payment_detail.received_transfer'),
-                    (12, 'tds_tax')
-]
-        for i, row in enumerate(serializer.data, start=2):
-            for column, key in column_mapping:
-                value = row
-                for k in key.split('.'):
-                    value = value.get(k)
-                    if value is None:
-                        break
-                worksheet.cell(row=i, column=column, value=value)
-        workbook.save(response)
-        return response
+# class ExcelExportViewtrail(APIView):
+#     def get(self, request):
+#         response = HttpResponse(content_type='application/ms-excel')
+#         response['Content-Disposition'] = 'attachment; filename="finance-in.xlsx"'
+#         workbook = openpyxl.Workbook()
+#         worksheet = workbook.active
+#         # Write headers
+#         headers = [
+#                     'Amount',
+#                     'Ref_no',
+#                     'Invoice_no',
+#                     'invoice_date',
+#                     'invoice_amount',
+#                     'deduction',
+#                     'deduction_reason',
+#                     'received_transfer',
+#                     'payment_date',
+#                     'payment_ref_no',
+#                     'received_transfer',
+#                     'Tds'
+#                 ]
+#         for index, header in enumerate(headers):
+#             cell = chr(ord('A') + index) + '1'
+#             worksheet[cell] = header
+#         # all_fields = Finance_in._meta.fields
+#         # Get data
+#         queryset = Finance_in.objects.all()
+#         serializer = FinanceInSerializer(queryset, many=True)
+#         # Write data to Excel file
+#         column_mapping = [
+#                     (1, 'amount'),
+#                     (2, 'ref_no'),
+#                     (3, 'invoice_detail.invoice_no'),
+#                     (4, 'invoice_detail.invoice_date'),
+#                     (5, 'invoice_detail.invoice_amount'),
+#                     (6, 'invoice_detail.deduction'),
+#                     (7, 'invoice_detail.deduction_reason'),
+#                     (8, 'invoice_detail.received_transfer'),
+#                     (9, 'payment_detail.payment_date'),
+#                     (10, 'payment_detail.payment_ref_no'),
+#                     (11, 'payment_detail.received_transfer'),
+#                     (12, 'tds_tax')
+# ]
+#         for i, row in enumerate(serializer.data, start=2):
+#             for column, key in column_mapping:
+#                 value = row
+#                 for k in key.split('.'):
+#                     value = value.get(k)
+#                     if value is None:
+#                         break
+#                 worksheet.cell(row=i, column=column, value=value)
+#         workbook.save(response)
+#         return response
 
